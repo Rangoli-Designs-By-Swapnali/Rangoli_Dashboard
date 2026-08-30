@@ -623,12 +623,12 @@
     "image": "Design49.png",
     "variants": [
       {
-        "size": "Regular (2pc)",
-        "price": 300 
+        "size": "Regular (1 pc)",
+        "price": 80 
       }
       ,
       {
-        "size": "Regular (1 pc)",
+        "size": "Regular (2 pc)",
         "price": 150 
       }
     ]
