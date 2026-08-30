@@ -1968,6 +1968,18 @@ body {
 @media(max-width:900px){.stat-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:650px){.admin-wrap{padding:10px}.admin-top{align-items:flex-start;flex-direction:column}.admin-actions{justify-content:flex-start}.stat-grid{grid-template-columns:repeat(2,1fr)}.admin-grid2,.admin-form-grid{grid-template-columns:1fr}.top-design-list{grid-template-columns:1fr}.admin-item-row{grid-template-columns:minmax(150px,1fr) 75px 65px 85px 35px;min-width:430px}}
 
+/* Manual-order catalogue selection — shown only while Admin > Manual Order > Add Item is active */
+.manual-selection-bar{position:fixed;left:0;right:0;bottom:0;z-index:1500;display:none;background:rgba(255,255,255,.98);backdrop-filter:blur(12px);border-top:1px solid #ead8e0;box-shadow:0 -7px 25px rgba(91,23,56,.15);padding:9px 14px}
+.manual-selection-bar.show{display:block}
+.manual-selection-inner{max-width:850px;margin:auto;display:grid;grid-template-columns:1fr 1.35fr;gap:8px}
+.manual-selection-btn{min-height:50px;border-radius:11px;border:1px solid #ead5df;background:#f7edf2;color:#5b1738;font-size:13px;font-weight:700;cursor:pointer;padding:7px 10px}
+.manual-selection-btn.primary{background:#9b2d62;color:#fff;border-color:#9b2d62}
+body.manual-selection-active .bottom-cart{display:none}
+.manual-order-preview{margin-top:10px;border:1px solid #ead8e0;border-radius:12px;background:#fff;overflow:hidden}
+.manual-order-preview .order-items{padding:0 15px 10px 15px;overflow:visible}
+.manual-order-preview .order-items-header{position:static}
+@media(max-width:600px){.manual-selection-bar{padding:8px 9px}.manual-selection-inner{gap:6px}.manual-selection-btn{min-height:47px;font-size:11px}.manual-order-preview .order-items{padding:0 9px 8px}}
+
 </style>
 
 
@@ -2181,6 +2193,13 @@ body {
 
 </div>
 
+<div class="manual-selection-bar" id="manualSelectionBar">
+  <div class="manual-selection-inner">
+    <button type="button" class="manual-selection-btn" onclick="cancelManualItemSelection()">← Cancel</button>
+    <button type="button" class="manual-selection-btn primary" onclick="confirmManualItemSelection()">✓ Add Items</button>
+  </div>
+</div>
+
 
 <!-- =====================================================
      CART / PREVIEW MODAL
@@ -2329,7 +2348,7 @@ body {
     </section>
 
     <section class="admin-panel" id="admin-neworder">
-      <div class="admin-card"><h3>Manual Order</h3><p class="admin-mini">Orders created from the shopping page are recorded automatically when you click Place Order. Use this only if you need to enter an order manually.</p>
+      <div class="admin-card"><h3>Manual Order</h3><p class="admin-mini">Orders created from the shopping page are recorded automatically when you click Place Order. For a manual order, use Add Item to choose designs directly from the shopping page.</p>
         <div class="admin-form-grid">
           
           <div class="admin-field"><label>Customer Name</label><input id="newCustomerName" placeholder="Customer name"></div>
@@ -2341,7 +2360,7 @@ body {
           <div class="admin-field admin-full"><label>Notes</label><textarea id="newNotes" placeholder="Shipping details, customer requests, payment notes..." style="min-height:70px"></textarea></div>
         </div>
         <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="admin-btn" onclick="addManualItem()">+ Add Item</button><button class="admin-btn primary" onclick="saveNewOrder()">💾 Save Order</button><button class="admin-btn" onclick="clearNewOrder()">Clear</button></div>
-        <div class="admin-order-items" id="newOrderItems"><div class="empty-admin">No items yet. Add an item manually if required.</div></div>
+        <div class="manual-order-preview" id="newOrderItems"><div class="empty-admin">No items yet. Click Add Item to choose designs from the shopping page.</div></div>
       </div>
     </section>
 
@@ -3366,21 +3385,12 @@ function updateCart() {
 ========================================================= */
 
 function renderCartPreview() {
-
-  const orderItems =
-    document.getElementById(
-      "orderItems"
-    );
-
+  const orderItems = document.getElementById("orderItems");
   orderItems.innerHTML = "";
 
-  const cartKeys =
-    Object.keys(cart).filter(
-      key => (cart[key] || 0) > 0
-    );
+  const hasItems = Object.keys(cart).some(key => (cart[key] || 0) > 0);
 
-  if (cartKeys.length === 0) {
-
+  if (!hasItems) {
     orderItems.innerHTML = `
       <div class="empty-cart">
         Your cart is empty.
@@ -3388,124 +3398,55 @@ function renderCartPreview() {
         Select a design to start your order.
       </div>
     `;
-
     updateCart();
     return;
   }
 
-  const header =
-    document.createElement("div");
-
-  header.className =
-    "order-items-header";
-
-  header.innerHTML = `
-    <span class="order-header-image">Image</span>
-    <span class="order-header-design">Design Number</span>
-    <span class="order-header-size">Size</span>
-    <span class="order-header-price">Price each</span>
-    <span class="order-header-quantity">Quantity</span>
-    <span class="order-header-subtotal">Subtotal</span>
+  orderItems.innerHTML = `
+    <div class="order-items-header">
+      <div class="header-image">Image</div>
+      <div class="header-details">Design Number</div>
+      <div class="header-quantity">Quantity</div>
+      <div class="header-subtotal">Subtotal</div>
+    </div>
   `;
 
-  orderItems.appendChild(header);
-
   designs.forEach(design => {
-
     design.variants.forEach((variant, variantIndex) => {
+      const key = getCartKey(design.id, variantIndex);
+      const quantity = cart[key] || 0;
+      if (quantity <= 0) return;
 
-      const key =
-        getCartKey(
-          design.id,
-          variantIndex
-        );
-
-      const quantity =
-        cart[key] || 0;
-
-      if (quantity <= 0) {
-        return;
-      }
-
-      const subtotal =
-        variant.price * quantity;
-
-      const item =
-        document.createElement("div");
-
-      item.className =
-        "order-item";
+      const subtotal = variant.price * quantity;
+      const item = document.createElement("div");
+      item.className = "order-item";
+      item.dataset.cartKey = key;
 
       item.innerHTML = `
-
         <div class="order-thumb-wrapper">
-          <img
-            class="order-thumb"
-            alt="${escapeHtml(design.name)}"
-          >
+          <img class="order-thumb" alt="${escapeHtml(design.name)}">
         </div>
 
-        <div class="order-design-cell">
-          <p class="order-design" title="${escapeHtml(design.name)}">
-            ${escapeHtml(design.name)}
-          </p>
+        <div class="order-details">
+          <p class="order-design">${escapeHtml(design.name)}</p>
+          <span class="order-size">Size: ${escapeHtml(variant.size)}</span>
+          <span class="order-price-each">Price each: ₹${formatPrice(variant.price)}</span>
         </div>
 
-        <div class="order-size-cell">
-          <span class="order-size" title="${escapeHtml(variant.size)}">
-            ${escapeHtml(variant.size)}
-          </span>
+        <div class="order-quantity">
+          <div class="preview-quantity-control">
+            <button type="button" class="quantity-btn" aria-label="Decrease quantity" onclick="changePreviewQuantity(${design.id}, ${variantIndex}, -1, event)">−</button>
+            <span class="quantity-value">${quantity}</span>
+            <button type="button" class="quantity-btn" aria-label="Increase quantity" onclick="changePreviewQuantity(${design.id}, ${variantIndex}, 1, event)">+</button>
+          </div>
         </div>
 
-        <div class="order-price-each-cell">
-          <span class="order-price-each">
-            ₹${formatPrice(variant.price)}
-          </span>
-        </div>
-
-        <div
-          class="order-quantity-controls"
-          aria-label="Quantity for ${escapeHtml(design.name)}"
-        >
-          <button
-            type="button"
-            class="order-quantity-btn"
-            aria-label="Decrease quantity"
-            onclick="changePreviewQuantity(${design.id}, ${variantIndex}, -1, event)"
-          >−</button>
-
-          <span class="order-quantity-value">
-            ${quantity}
-          </span>
-
-          <button
-            type="button"
-            class="order-quantity-btn"
-            aria-label="Increase quantity"
-            onclick="changePreviewQuantity(${design.id}, ${variantIndex}, 1, event)"
-          >+</button>
-        </div>
-
-        <div class="order-price">
-          ₹${formatPrice(subtotal)}
-        </div>
-
+        <div class="order-price">₹${formatPrice(subtotal)}</div>
       `;
 
       orderItems.appendChild(item);
-
-      const thumbnail =
-        item.querySelector(
-          ".order-thumb"
-        );
-
-      setupImageFallback(
-        thumbnail,
-        design.image
-      );
-
+      setupImageFallback(item.querySelector(".order-thumb"), design.image);
     });
-
   });
 
   updateCart();
@@ -3516,49 +3457,22 @@ function renderCartPreview() {
    CHANGE QUANTITY FROM CART PREVIEW
 ========================================================= */
 
-function changePreviewQuantity(
-  designId,
-  variantIndex,
-  amount,
-  event
-) {
-
+function changePreviewQuantity(designId, variantIndex, amount, event) {
   if (event) {
     event.preventDefault();
     event.stopPropagation();
   }
 
-  const key =
-    getCartKey(
-      designId,
-      variantIndex
-    );
-
-  let quantity =
-    cart[key] || 0;
-
+  const key = getCartKey(designId, variantIndex);
+  let quantity = cart[key] || 0;
   quantity += amount;
 
-  if (quantity <= 0) {
-    delete cart[key];
-  }
-  else {
-    cart[key] = quantity;
-  }
+  if (quantity <= 0) delete cart[key];
+  else cart[key] = quantity;
 
-  // Keep the main shopping page quantity counter and checkbox
-  // synchronized with the preview cart.
-  updateVariantUI(
-    designId,
-    variantIndex
-  );
-
-  updateCardSelection(
-    designId
-  );
-
-  // Re-render the preview so quantity and subtotal update immediately.
-  // If quantity reaches zero, that item disappears from the preview.
+  updateVariantUI(designId, variantIndex);
+  updateCardSelection(designId);
+  updateCart();
   renderCartPreview();
 }
 
@@ -3568,163 +3482,8 @@ function changePreviewQuantity(
 ========================================================= */
 
 function openCart() {
-  const orderItems = document.getElementById("orderItems");
-  orderItems.innerHTML = "";
-
-  if (Object.keys(cart).length === 0) {
-    orderItems.innerHTML = `
-      <div class="empty-cart">
-        Your cart is empty.
-        <br><br>
-        Select a design to start your order.
-      </div>
-    `;
-  } else {
-    orderItems.innerHTML = `
-      <div class="order-items-header">
-        <div class="header-image">Image</div>
-        <div class="header-details">Design Number</div>
-        <div class="header-quantity">Quantity</div>
-        <div class="header-subtotal">Subtotal</div>
-      </div>
-    `;
-
-    designs.forEach(design => {
-      design.variants.forEach((variant, variantIndex) => {
-        const key = getCartKey(design.id, variantIndex);
-        const quantity = cart[key] || 0;
-
-        if (quantity <= 0) return;
-
-        const subtotal = variant.price * quantity;
-        const item = document.createElement("div");
-
-        item.className = "order-item";
-        item.dataset.cartKey = key;
-
-        item.innerHTML = `
-          <div class="order-thumb-wrapper">
-            <img
-              class="order-thumb"
-              alt="${escapeHtml(design.name)}"
-            >
-          </div>
-
-          <div class="order-details">
-            <p class="order-design">
-              ${escapeHtml(design.name)}
-            </p>
-
-            <span class="order-size">
-              Size: ${escapeHtml(variant.size)}
-            </span>
-
-            <span class="order-price-each">
-              Price each: ₹${formatPrice(variant.price)}
-            </span>
-          </div>
-
-          <div class="order-quantity">
-            <div class="preview-quantity-control">
-              <button
-                type="button"
-                class="quantity-btn"
-                aria-label="Decrease quantity"
-                onclick="changePreviewQuantity(${design.id}, ${variantIndex}, -1, event)"
-              >−</button>
-
-              <span class="quantity-value">${quantity}</span>
-
-              <button
-                type="button"
-                class="quantity-btn"
-                aria-label="Increase quantity"
-                onclick="changePreviewQuantity(${design.id}, ${variantIndex}, 1, event)"
-              >+</button>
-            </div>
-          </div>
-
-          <div class="order-price">
-            ₹${formatPrice(subtotal)}
-          </div>
-        `;
-
-        orderItems.appendChild(item);
-
-        const thumbnail = item.querySelector(".order-thumb");
-        setupImageFallback(thumbnail, design.image);
-      });
-    });
-  }
-
-  updateCart();
-
-  document
-    .getElementById("orderModal")
-    .classList.add("show");
-}
-
-/* =========================================================
-   CHANGE QUANTITY FROM PREVIEW
-========================================================= */
-
-function changePreviewQuantity(
-  designId,
-  variantIndex,
-  amount,
-  event
-) {
-
-  if (event) {
-    event.preventDefault();
-    event.stopPropagation();
-  }
-
-  const key =
-    getCartKey(
-      designId,
-      variantIndex
-    );
-
-  let quantity =
-    cart[key] || 0;
-
-  quantity += amount;
-
-  if (quantity <= 0) {
-    delete cart[key];
-  }
-  else {
-    cart[key] = quantity;
-  }
-
-  /*
-     Keep the quantity and checkbox on the main shopping page
-     synchronized with the quantity changed inside the preview.
-  */
-  updateVariantUI(
-    designId,
-    variantIndex
-  );
-
-  updateCardSelection(
-    designId
-  );
-
-  updateCart();
-
-  /*
-     Re-render the preview using the same cart object.
-     This keeps the changed quantity and subtotal correct
-     when the user continues shopping, closes the preview,
-     or opens the preview again.
-  */
   renderCartPreview();
-
-  /*
-     renderCartPreview() rebuilds the preview contents but does
-     not hide the modal, so it remains open after the click.
-  */
+  document.getElementById("orderModal").classList.add("show");
 }
 
 
@@ -3964,6 +3723,8 @@ const ADMIN_API_KEY = "ee0257ba72c1487e9c0ed77a0deeeb20";
 let adminOrders = [];
 let adminSettings = {businessName:"Swapnali's Rangoli",footer:"Thank you for your order! 🌸"};
 let newOrderItems = [];
+let manualSelectionSavedCart = null;
+let manualItemSelectionActive = false;
 let selectedInvoiceOrderId = "";
 let adminLoading = false;
 
@@ -4099,14 +3860,150 @@ function deleteOrder(id){
   if(!confirm("Delete this order permanently from Google Sheets?"))return;
   apiCall("deleteOrder",{id},(result)=>{if(result){adminOrders=result.orders||adminOrders;refreshAdmin();}})
 }
-function addManualItem(){newOrderItems.push({design:"",size:"",price:0,quantity:1});renderNewOrderItems()}
-function removeNewItem(i){newOrderItems.splice(i,1);renderNewOrderItems()}
-function updateNewItem(i,field,value){newOrderItems[i][field]=field==="price"||field==="quantity"?Number(value):value;renderNewOrderItems(false)}
-function renderNewOrderItems(focus=true){
-  const box=document.getElementById("newOrderItems");
-  if(!newOrderItems.length){box.innerHTML="<div class='empty-admin'>No items yet. Add an item manually if required.</div>";return}
-  box.innerHTML=newOrderItems.map((x,i)=>`<div class="admin-item-row"><div><input value="${adminEsc(x.design)}" placeholder="Design" oninput="updateNewItem(${i},'design',this.value)"><div class="admin-mini">Design</div></div><div><input value="${adminEsc(x.size)}" placeholder="Size" oninput="updateNewItem(${i},'size',this.value)"><div class="admin-mini">Size</div></div><div><input type="number" min="0" value="${Number(x.price)||0}" oninput="updateNewItem(${i},'price',this.value)"><div class="admin-mini">Price</div></div><div><input type="number" min="1" value="${Number(x.quantity)||1}" oninput="updateNewItem(${i},'quantity',this.value)"><div class="admin-mini">Qty</div></div><button class="admin-remove" onclick="removeNewItem(${i})">×</button></div>`).join("")
+function copyCart(source){
+  const copy={};
+  Object.keys(source||{}).forEach(key=>{copy[key]=Number(source[key])||0});
+  return copy;
 }
+
+function replaceCart(source){
+  Object.keys(cart).forEach(key=>delete cart[key]);
+  Object.keys(source||{}).forEach(key=>{
+    const quantity=Number(source[key])||0;
+    if(quantity>0)cart[key]=quantity;
+  });
+  designs.forEach(d=>d.variants.forEach((v,vi)=>updateVariantUI(d.id,vi)));
+  designs.forEach(d=>updateCardSelection(d.id));
+  updateCart();
+}
+
+function addManualItem(){
+  manualSelectionSavedCart=copyCart(cart);
+  const selectionCart={};
+
+  newOrderItems.forEach(item=>{
+    if(item.designId!=null && item.variantIndex!=null){
+      selectionCart[getCartKey(item.designId,item.variantIndex)]=Number(item.quantity)||1;
+    }
+  });
+
+  manualItemSelectionActive=true;
+  replaceCart(selectionCart);
+  document.getElementById("adminScreen").classList.remove("show");
+  document.body.style.overflow="";
+  document.body.classList.add("manual-selection-active");
+  document.getElementById("manualSelectionBar").classList.add("show");
+  window.scrollTo({top:0,behavior:"auto"});
+}
+
+function finishManualSelectionUI(){
+  manualItemSelectionActive=false;
+  document.body.classList.remove("manual-selection-active");
+  document.getElementById("manualSelectionBar").classList.remove("show");
+}
+
+function returnToManualOrder(){
+  document.getElementById("adminScreen").classList.add("show");
+  document.body.style.overflow="hidden";
+  adminTab("neworder");
+}
+
+function cancelManualItemSelection(){
+  if(!manualItemSelectionActive)return;
+  replaceCart(manualSelectionSavedCart||{});
+  manualSelectionSavedCart=null;
+  finishManualSelectionUI();
+  returnToManualOrder();
+}
+
+function confirmManualItemSelection(){
+  if(!manualItemSelectionActive)return;
+
+  const selected=[];
+  designs.forEach(design=>{
+    design.variants.forEach((variant,variantIndex)=>{
+      const quantity=Number(cart[getCartKey(design.id,variantIndex)]||0);
+      if(quantity>0){
+        selected.push({
+          design:design.name,
+          size:variant.size,
+          price:Number(variant.price)||0,
+          quantity,
+          image:design.image,
+          designId:design.id,
+          variantIndex
+        });
+      }
+    });
+  });
+
+  newOrderItems=selected;
+  replaceCart(manualSelectionSavedCart||{});
+  manualSelectionSavedCart=null;
+  finishManualSelectionUI();
+  returnToManualOrder();
+  renderNewOrderItems();
+}
+
+function removeNewItem(i){
+  newOrderItems.splice(i,1);
+  renderNewOrderItems();
+}
+
+function changeManualItemQuantity(i,amount,event){
+  if(event){event.preventDefault();event.stopPropagation()}
+  const item=newOrderItems[i];
+  if(!item)return;
+  const next=(Number(item.quantity)||0)+amount;
+  if(next<=0)newOrderItems.splice(i,1);
+  else item.quantity=next;
+  renderNewOrderItems();
+}
+
+function renderNewOrderItems(){
+  const box=document.getElementById("newOrderItems");
+  if(!newOrderItems.length){
+    box.innerHTML="<div class='empty-admin'>No items yet. Click Add Item to choose designs from the shopping page.</div>";
+    return;
+  }
+
+  box.innerHTML=`
+    <div class="order-items">
+      <div class="order-items-header">
+        <div class="header-image">Image</div>
+        <div class="header-details">Design Number</div>
+        <div class="header-quantity">Quantity</div>
+        <div class="header-subtotal">Subtotal</div>
+      </div>
+      ${newOrderItems.map((x,i)=>`
+        <div class="order-item">
+          <div class="order-thumb-wrapper">
+            <img class="order-thumb manual-order-thumb" data-manual-index="${i}" alt="${adminEsc(x.design)}">
+          </div>
+          <div class="order-details">
+            <p class="order-design">${adminEsc(x.design)}</p>
+            <span class="order-size">Size: ${adminEsc(x.size)}</span>
+            <span class="order-price-each">Price each: ${adminMoney(x.price)}</span>
+          </div>
+          <div class="order-quantity">
+            <div class="preview-quantity-control">
+              <button type="button" class="quantity-btn" aria-label="Decrease quantity" onclick="changeManualItemQuantity(${i},-1,event)">−</button>
+              <span class="quantity-value">${Number(x.quantity)||1}</span>
+              <button type="button" class="quantity-btn" aria-label="Increase quantity" onclick="changeManualItemQuantity(${i},1,event)">+</button>
+            </div>
+          </div>
+          <div class="order-price">${adminMoney((Number(x.price)||0)*(Number(x.quantity)||1))}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+
+  box.querySelectorAll(".manual-order-thumb").forEach(img=>{
+    const item=newOrderItems[Number(img.dataset.manualIndex)];
+    if(item)setupImageFallback(img,item.image||"");
+  });
+}
+
 function parseWhatsAppOrder(){ alert("Automatic order recording is enabled. You no longer need to paste a WhatsApp message."); }
 
 function saveNewOrder(){
