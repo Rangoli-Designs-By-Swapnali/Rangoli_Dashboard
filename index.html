@@ -1946,111 +1946,39 @@ body {
 
 
 /* =========================================================
-   ADMIN DASHBOARD — ADDITIVE ONLY
+   ADMIN DASHBOARD — UPDATED RESPONSIVE UI
 ========================================================= */
 .admin-screen{position:fixed;inset:0;z-index:5000;background:#f7edf2;display:none;overflow:auto;color:#3d2030}
 .admin-screen.show{display:block}
-.admin-wrap{max-width:1250px;margin:auto;padding:18px}
-.admin-top{background:#fff;border-radius:20px;padding:16px 18px;box-shadow:0 10px 35px rgba(91,23,56,.12);display:flex;justify-content:space-between;gap:12px;align-items:center;position:sticky;top:0;z-index:20}
-.admin-brand{font-size:22px;font-weight:800;color:#5b1738}.admin-sub{font-size:11px;color:#806b74;margin-top:3px}
-.admin-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
-.admin-btn{border:1px solid #ead5df;background:#f8edf2;color:#5b1738;border-radius:9px;padding:9px 12px;font-weight:700;cursor:pointer}.admin-btn.primary{background:#9b2d62;color:#fff;border-color:#9b2d62}.admin-btn.danger{background:#fff0f0;color:#a52b2b;border-color:#efcccc}
-.admin-nav{display:flex;gap:7px;overflow:auto;margin:14px 0}.admin-tab{white-space:nowrap;border:1px solid #ead5df;background:#fff;color:#6f1d45;padding:9px 14px;border-radius:10px;font-weight:700;cursor:pointer}.admin-tab.active{background:#9b2d62;color:#fff;border-color:#9b2d62}
+.admin-wrap{width:100%;max-width:1400px;margin:auto;padding:clamp(8px,1.5vw,18px)}
+.admin-top{background:#fff;border-radius:18px;padding:12px clamp(10px,1.5vw,18px);box-shadow:0 10px 35px rgba(91,23,56,.12);display:flex;justify-content:space-between;gap:12px;align-items:center;position:sticky;top:8px;z-index:100;backdrop-filter:blur(12px);border:1px solid #ead8e0}
+.admin-brand{font-size:clamp(16px,2vw,22px);font-weight:800;color:#5b1738}.admin-sub{font-size:10px;color:#806b74;margin-top:3px}
+.admin-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.admin-btn{border:1px solid #ead5df;background:#f8edf2;color:#5b1738;border-radius:9px;padding:8px 10px;font-weight:700;cursor:pointer;white-space:nowrap;font-size:12px}.admin-btn:hover{background:#f1e1e9}.admin-btn.active{background:#9b2d62;color:#fff;border-color:#9b2d62}.admin-btn.primary{background:#9b2d62;color:#fff;border-color:#9b2d62}.admin-btn.danger{background:#fff0f0;color:#a52b2b;border-color:#efcccc}
+.admin-filter{border:1px solid #ead5df;background:#fffafd;color:#5b1738;border-radius:9px;padding:8px 10px;font-weight:700;font-size:12px;min-width:170px;cursor:pointer}
 .admin-panel{display:none}.admin-panel.active{display:block}
-.stat-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.stat-card{background:#fff;border:1px solid #ead8e0;border-radius:15px;padding:15px;box-shadow:0 6px 20px rgba(91,23,56,.07)}.stat-label{font-size:11px;color:#806b74}.stat-value{font-size:23px;font-weight:800;color:#5b1738;margin-top:5px}.stat-note{font-size:10px;color:#9b6f7e;margin-top:3px}
-.admin-card{background:#fff;border:1px solid #ead8e0;border-radius:16px;padding:15px;margin-top:12px;box-shadow:0 6px 20px rgba(91,23,56,.07)}.admin-card h3{margin:0 0 12px;color:#5b1738;font-size:16px}
-.admin-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.admin-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.admin-field label{display:block;font-size:11px;font-weight:700;color:#6f1d45;margin-bottom:4px}.admin-field input,.admin-field select,.admin-field textarea{width:100%;border:1px solid #e2ccd6;border-radius:9px;padding:9px;background:#fffafd;color:#3d2030;font:inherit;font-size:13px}.admin-field textarea{min-height:100px;resize:vertical}.admin-full{grid-column:1/-1}
-.admin-order-items{margin-top:10px;border:1px solid #ead8e0;border-radius:10px;overflow:auto}.admin-item-row{display:grid;grid-template-columns:minmax(0,1.4fr) 100px 90px 100px 40px;gap:7px;padding:8px;border-bottom:1px solid #eee3e7;align-items:center}.admin-item-row:last-child{border-bottom:0}.admin-item-row input,.admin-item-row select{width:100%;padding:7px;border:1px solid #e2ccd6;border-radius:7px;font-size:12px}.admin-mini{font-size:10px;color:#806b74}.admin-remove{border:0;background:#fff0f0;color:#a52b2b;border-radius:7px;height:30px;cursor:pointer}
-.order-table-wrap{overflow:auto}.order-table{width:100%;border-collapse:collapse;min-width:850px}.order-table th,.order-table td{padding:9px 8px;border-bottom:1px solid #eee3e7;text-align:left;font-size:12px}.admin-thumb{width:42px;height:42px;object-fit:contain;border-radius:7px;background:#f7f2f4;border:1px solid #ead8e0}.admin-thumb-stack{display:flex;gap:3px;align-items:center}.admin-thumb-more{font-size:9px;color:#806b74}.order-table th{color:#6f1d45;background:#faf2f6;position:sticky;top:0}.status-pill{display:inline-block;padding:4px 7px;border-radius:20px;font-size:10px;font-weight:800}.status-New{background:#fff0d7;color:#8b5a00}.status-Confirmed{background:#e7f5ff;color:#17648b}.status-Packed{background:#eee9ff;color:#6240a0}.status-Dispatched{background:#e8f7ed;color:#247043}.status-Delivered{background:#dff5e6;color:#176936}.status-Cancelled{background:#ffe5e5;color:#a52b2b}
-.search-row{display:flex;gap:8px;flex-wrap:wrap}.search-row input,.search-row select{padding:9px;border:1px solid #e2ccd6;border-radius:9px;background:#fff;min-width:160px}.search-row input{flex:1}
-.invoice-box{background:#fff;border:1px solid #ead8e0;border-radius:12px;padding:18px;max-width:850px;margin:auto}.invoice-head{display:flex;justify-content:space-between;gap:15px;border-bottom:2px solid #9b2d62;padding-bottom:12px}.invoice-brand{font-size:22px;font-weight:800;color:#5b1738}.invoice-meta{text-align:right;font-size:11px;color:#806b74}.invoice-customer{margin:14px 0;font-size:12px}.invoice-lines{width:100%;border-collapse:collapse}.invoice-lines th,.invoice-lines td{padding:8px;border-bottom:1px solid #eee3e7;text-align:left;font-size:12px}.invoice-total{text-align:right;font-size:18px;font-weight:800;color:#5b1738;margin-top:12px}.invoice-item-image{width:46px;height:46px;object-fit:contain;border-radius:6px;background:#f7f2f4;border:1px solid #ead8e0}.invoice-actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end}.top-design-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.top-design{display:flex;justify-content:space-between;background:#faf2f6;border-radius:9px;padding:9px;font-size:12px}.empty-admin{text-align:center;padding:30px;color:#8d7880}
-.pin-modal{position:fixed;inset:0;background:rgba(44,15,30,.65);z-index:6000;display:none;align-items:center;justify-content:center;padding:15px}.pin-modal.show{display:flex}.pin-box{background:#fff;border-radius:18px;padding:20px;max-width:350px;width:100%;text-align:center}.pin-box h3{margin:0 0 8px;color:#5b1738}.pin-box p{font-size:11px;color:#806b74}.pin-box input{width:100%;padding:11px;border:1px solid #e2ccd6;border-radius:9px;text-align:center;font-size:18px;letter-spacing:5px}.pin-actions{display:flex;gap:8px;margin-top:10px}.pin-actions button{flex:1}
-@media(max-width:900px){.stat-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:650px){.admin-wrap{padding:10px}.admin-top{align-items:flex-start;flex-direction:column}.admin-actions{justify-content:flex-start}.stat-grid{grid-template-columns:repeat(2,1fr)}.admin-grid2,.admin-form-grid{grid-template-columns:1fr}.top-design-list{grid-template-columns:1fr}.admin-item-row{grid-template-columns:minmax(150px,1fr) 75px 65px 85px 35px;min-width:430px}}
+.stat-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.stat-card{background:#fff;border:1px solid #ead8e0;border-radius:14px;padding:12px;box-shadow:0 6px 20px rgba(91,23,56,.07);min-width:0}.stat-label{font-size:10px;color:#806b74}.stat-value{font-size:clamp(17px,2vw,23px);font-weight:800;color:#5b1738;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stat-note{font-size:9px;color:#9b6f7e;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-card{background:#fff;border:1px solid #ead8e0;border-radius:15px;padding:13px;margin-top:10px;box-shadow:0 6px 20px rgba(91,23,56,.07)}.admin-card h3{margin:0 0 10px;color:#5b1738;font-size:15px}
+.admin-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.admin-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.admin-field label{display:block;font-size:10px;font-weight:700;color:#6f1d45;margin-bottom:4px}.admin-field input,.admin-field select,.admin-field textarea{width:100%;border:1px solid #e2ccd6;border-radius:9px;padding:8px;background:#fffafd;color:#3d2030;font:inherit;font-size:12px}.admin-field textarea{min-height:80px;resize:vertical}.admin-full{grid-column:1/-1}
+.order-table-wrap{overflow:auto}.order-table{width:100%;border-collapse:collapse;min-width:820px}.order-table th,.order-table td{padding:8px 7px;border-bottom:1px solid #eee3e7;text-align:left;font-size:11px}.order-table th{color:#6f1d45;background:#faf2f6;position:sticky;top:0}.admin-thumb{width:40px;height:40px;object-fit:contain;border-radius:7px;background:#f7f2f4;border:1px solid #ead8e0}.admin-thumb-stack{display:flex;gap:3px;align-items:center}.admin-thumb-more{font-size:9px;color:#806b74}
+.status-pill{display:inline-block;padding:4px 7px;border-radius:20px;font-size:9px;font-weight:800}.status-New{background:#fff0d7;color:#8b5a00}.status-Confirmed{background:#e7f5ff;color:#17648b}.status-Dispatched{background:#e8f7ed;color:#247043}.status-Delivered{background:#dff5e6;color:#176936}.status-Cancelled{background:#ffe5e5;color:#a52b2b}
+.status-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}.status-card{min-height:62px;border-radius:11px;padding:8px 7px;border:1px solid #ead8e0;background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;transition:.15s}.status-card:hover{transform:translateY(-1px);box-shadow:0 5px 12px rgba(91,23,56,.08)}.status-card .status-count{font-size:17px;font-weight:800;color:#5b1738}.status-card.status-New{background:#fff8e9}.status-card.status-Confirmed{background:#f0f9ff}.status-card.status-Dispatched{background:#effaf3}.status-card.status-Delivered{background:#effaf2}.status-card.status-Cancelled{background:#fff3f3}
+.top-design-list{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px}.top-design{min-width:0;background:#faf2f6;border:1px solid #ead8e0;border-radius:9px;padding:5px 4px;text-align:center;cursor:pointer;transition:.15s}.top-design:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(91,23,56,.1)}.top-design img{width:100%;height:58px;object-fit:contain;border-radius:6px;background:#fff;border:1px solid #ead8e0}.top-design-name{font-size:8px;color:#6f1d45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px}.top-design-count{font-size:12px;font-weight:800;color:#9b2d62;margin-top:2px}
+.upcoming-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.upcoming-card{border:2px solid #ead8e0;background:#fffafd;border-radius:11px;padding:9px;cursor:pointer}.upcoming-card.status-New{border-color:#d9ae54;background:#fffaf0}.upcoming-card.status-Confirmed{border-color:#77b9dc;background:#f4fbff}.upcoming-card.status-Dispatched{border-color:#78bd91;background:#f3fbf5}.upcoming-card.status-Delivered{border-color:#78b88b;background:#f0faf3}.upcoming-card.status-Cancelled{border-color:#d98c8c;background:#fff5f5}.upcoming-head{display:flex;justify-content:space-between;gap:7px;align-items:flex-start}.upcoming-order-no{font-weight:800;color:#5b1738;font-size:12px}.upcoming-customer{font-size:11px;font-weight:800;color:#6f1d45;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.upcoming-date{font-size:9px;color:#806b74;margin-top:4px}.upcoming-thumbs{display:flex;gap:4px;margin-top:7px;align-items:center}.upcoming-thumbs img{width:38px;height:38px;object-fit:contain;border:1px solid #ead8e0;border-radius:6px;background:#fff}.upcoming-more{font-size:9px;color:#806b74}.upcoming-total{font-size:12px;font-weight:800;color:#9b2d62;margin-top:4px}
+.search-row{display:flex;gap:7px;flex-wrap:wrap}.search-row input,.search-row select{padding:8px;border:1px solid #e2ccd6;border-radius:9px;background:#fff;min-width:150px;font-size:12px}.search-row input{flex:1}
+.invoice-box{background:#fff;border:1px solid #ead8e0;border-radius:12px;padding:18px;max-width:850px;margin:auto}.invoice-head{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:10px;align-items:center;border-bottom:2px solid #9b2d62;padding-bottom:12px}.invoice-head-col{text-align:center}.invoice-head-col:first-child{text-align:left}.invoice-head-col:last-child{text-align:right}.invoice-customer-name{font-size:17px;font-weight:800;color:#5b1738}.invoice-brand{font-size:22px;font-weight:800;color:#5b1738}.invoice-meta{font-size:10px;color:#806b74;line-height:1.5}.invoice-address{text-align:center;margin:10px 0 13px;padding:8px;border-bottom:1px solid #ead8e0;color:#5f4650;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.invoice-lines{width:100%;border-collapse:collapse}.invoice-lines th,.invoice-lines td{padding:7px;border-bottom:1px solid #eee3e7;text-align:left;font-size:11px}.invoice-total{text-align:right;font-size:17px;font-weight:800;color:#5b1738;margin-top:8px;line-height:1.7}.invoice-total .grand{font-size:19px;border-top:2px solid #9b2d62;padding-top:4px}.invoice-item-image{width:44px;height:44px;object-fit:contain;border-radius:6px;background:#f7f2f4;border:1px solid #ead8e0}.invoice-actions{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
+.invoice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.invoice-card{background:#fff;border:1px solid #ead8e0;border-radius:12px;padding:9px;box-shadow:0 5px 16px rgba(91,23,56,.06);cursor:pointer}.invoice-card:hover{box-shadow:0 8px 20px rgba(91,23,56,.12)}.invoice-card-head{display:flex;justify-content:space-between;gap:7px}.invoice-card-no{font-weight:800;color:#5b1738;font-size:13px}.invoice-card-date{font-size:9px;color:#806b74;margin-top:3px}.invoice-card-customer{font-size:10px;color:#6f1d45;font-weight:700;margin-top:5px}.invoice-card-thumbs{display:flex;gap:4px;margin:7px 0;align-items:center}.invoice-card-thumbs img{width:44px;height:44px;object-fit:contain;border:1px solid #ead8e0;border-radius:6px;background:#f7f2f4}.invoice-card-total{font-size:13px;font-weight:800;color:#9b2d62}.invoice-pagination{display:flex;justify-content:center;align-items:center;gap:5px;margin-top:10px}.invoice-pagination button{border:1px solid #ead5df;background:#fff;color:#5b1738;border-radius:8px;padding:6px 9px;font-weight:700;cursor:pointer}.invoice-pagination button.active{background:#9b2d62;color:#fff;border-color:#9b2d62}
+.empty-admin{text-align:center;padding:25px;color:#8d7880}.admin-mini{font-size:9px;color:#806b74}.manual-total-strip{display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:800;color:#5b1738;white-space:nowrap}.manual-total-strip span:last-child{color:#9b2d62;font-size:15px}
+.pin-modal{position:fixed;inset:0;background:rgba(44,15,30,.65);z-index:6000;display:none;align-items:center;justify-content:center;padding:12px}.pin-modal.show{display:flex}.pin-box{background:#fff;border-radius:18px;padding:18px;max-width:420px;width:100%;text-align:center}.pin-box h3{margin:0 0 7px;color:#5b1738}.pin-box p{font-size:10px;color:#806b74}.pin-box input{width:100%;padding:10px;border:1px solid #e2ccd6;border-radius:9px;text-align:center;font-size:17px;letter-spacing:5px}.pin-actions{display:flex;gap:8px;margin-top:10px}.pin-actions button{flex:1}
+.edit-order-box{max-width:1100px!important;width:100%!important;text-align:left!important;max-height:94vh;overflow:hidden;padding:0!important;display:flex;flex-direction:column}.edit-order-header{padding:15px 17px 10px;border-bottom:1px solid #ead8e0;flex:0 0 auto}.edit-order-scroll{overflow:auto;padding:12px 17px 95px}.edit-preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:9px;margin-top:8px}.edit-item-card{background:#fffafd;border:1px solid #ead8e0;border-radius:12px;padding:9px;position:relative}.edit-item-card .edit-remove{position:absolute;right:7px;top:7px;border:0;background:#fff0f0;color:#a52b2b;border-radius:7px;width:27px;height:27px;font-size:18px;cursor:pointer}.edit-item-card img{width:100%;height:120px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid #ead8e0}.edit-item-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:7px}.edit-item-grid label{font-size:8px;color:#806b74}.edit-item-grid input{width:100%;padding:7px;border:1px solid #e2ccd6;border-radius:7px;font-size:11px;background:#fff}.edit-sticky-actions{position:absolute;left:0;right:0;bottom:0;padding:9px 17px;background:rgba(255,255,255,.98);border-top:1px solid #ead8e0;box-shadow:0 -5px 15px rgba(91,23,56,.1);display:flex;gap:8px;z-index:3}.edit-sticky-actions button{flex:1;min-height:43px}
+.manual-selection-bar{position:fixed;left:0;right:0;bottom:0;z-index:1500;display:none;background:rgba(255,255,255,.98);backdrop-filter:blur(12px);border-top:1px solid #ead8e0;box-shadow:0 -7px 25px rgba(91,23,56,.15);padding:8px 12px}.manual-selection-bar.show{display:block}.manual-selection-inner{max-width:850px;margin:auto;display:grid;grid-template-columns:1fr 1.35fr;gap:7px}.manual-selection-btn{min-height:48px;border-radius:10px;border:1px solid #ead5df;background:#f7edf2;color:#5b1738;font-size:12px;font-weight:700;cursor:pointer}.manual-selection-btn.primary{background:#9b2d62;color:#fff;border-color:#9b2d62}body.manual-selection-active .bottom-cart{display:none}
+@media(max-width:1100px){.top-design-list{grid-template-columns:repeat(6,minmax(0,1fr))}.stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.admin-top{position:relative;top:0;align-items:flex-start;flex-direction:column}.admin-actions{justify-content:flex-start;width:100%}.admin-filter{min-width:145px}.admin-grid2{grid-template-columns:1fr}.upcoming-grid,.invoice-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.top-design-list{grid-template-columns:repeat(5,minmax(0,1fr))}.invoice-head{grid-template-columns:1fr 1fr 1fr}.invoice-brand{font-size:17px}.invoice-customer-name{font-size:14px}}
+@media(max-width:560px){.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.status-grid{grid-template-columns:repeat(5,minmax(70px,1fr));overflow:auto}.status-card{min-width:70px}.top-design-list{grid-template-columns:repeat(3,minmax(0,1fr))}.upcoming-grid,.invoice-grid{grid-template-columns:1fr}.admin-form-grid{grid-template-columns:1fr}.admin-full{grid-column:auto}.invoice-box{padding:10px}.invoice-head{grid-template-columns:1fr}.invoice-head-col,.invoice-head-col:first-child,.invoice-head-col:last-child{text-align:center}.invoice-address{white-space:normal}.edit-preview-grid{grid-template-columns:1fr 1fr}.edit-order-scroll{padding:10px 10px 90px}.edit-sticky-actions{padding:8px 10px}}
+@media(max-width:360px){.edit-preview-grid{grid-template-columns:1fr}.top-design-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
-/* Manual-order catalogue selection — shown only while Admin > Manual Order > Add Item is active */
-.manual-selection-bar{position:fixed;left:0;right:0;bottom:0;z-index:1500;display:none;background:rgba(255,255,255,.98);backdrop-filter:blur(12px);border-top:1px solid #ead8e0;box-shadow:0 -7px 25px rgba(91,23,56,.15);padding:9px 14px}
-.manual-selection-bar.show{display:block}
-.manual-selection-inner{max-width:850px;margin:auto;display:grid;grid-template-columns:1fr 1.35fr;gap:8px}
-.manual-selection-btn{min-height:50px;border-radius:11px;border:1px solid #ead5df;background:#f7edf2;color:#5b1738;font-size:13px;font-weight:700;cursor:pointer;padding:7px 10px}
-.manual-selection-btn.primary{background:#9b2d62;color:#fff;border-color:#9b2d62}
-body.manual-selection-active .bottom-cart{display:none}
-.manual-order-preview{margin-top:10px;border:1px solid #ead8e0;border-radius:12px;background:#fff;overflow:hidden}
-.manual-order-preview .order-items{padding:0 15px 10px 15px;overflow:visible}
-.manual-order-preview .order-items-header{position:static}
-@media(max-width:600px){.manual-selection-bar{padding:8px 9px}.manual-selection-inner{gap:6px}.manual-selection-btn{min-height:47px;font-size:11px}.manual-order-preview .order-items{padding:0 9px 8px}}
-
-
-/* =========================================================
-   ADMIN UPDATES
-========================================================= */
-.admin-top{
-  position:sticky !important;
-  top:0 !important;
-  z-index:100 !important;
-  backdrop-filter:blur(12px);
-  border:1px solid #ead8e0;
-}
-.admin-screen{overscroll-behavior:contain}
-.admin-month-toolbar{
-  display:flex;justify-content:space-between;align-items:center;gap:12px;
-  background:#fff;border:1px solid #ead8e0;border-radius:14px;padding:11px 13px;
-  box-shadow:0 5px 16px rgba(91,23,56,.06);margin-bottom:10px;
-}
-.admin-month-toolbar strong{display:block;color:#5b1738;font-size:14px}
-.admin-month-toolbar select{min-width:170px;padding:8px 10px;border:1px solid #e2ccd6;border-radius:9px;background:#fffafd;color:#5b1738;font-weight:700}
-.upcoming-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.upcoming-card{
-  border:1px solid #ead8e0;background:#fffafd;border-radius:12px;padding:10px;
-}
-.upcoming-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
-.upcoming-order-no{font-weight:800;color:#5b1738;font-size:13px}
-.upcoming-date{font-size:10px;color:#806b74;margin-top:3px}
-.upcoming-thumbs{display:flex;gap:5px;margin-top:9px;align-items:center}
-.upcoming-thumbs img{width:45px;height:45px;object-fit:contain;border:1px solid #ead8e0;border-radius:7px;background:#fff}
-.upcoming-more{font-size:10px;color:#806b74}
-.upcoming-customer{font-size:11px;font-weight:700;color:#6f1d45;margin-top:8px}
-.upcoming-total{font-size:13px;font-weight:800;color:#9b2d62;margin-top:4px}
-.invoice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.invoice-card{
-  background:#fff;border:1px solid #ead8e0;border-radius:14px;padding:11px;
-  box-shadow:0 5px 16px rgba(91,23,56,.06);
-}
-.invoice-card-head{display:flex;justify-content:space-between;gap:8px}
-.invoice-card-no{font-weight:800;color:#5b1738;font-size:14px}
-.invoice-card-date{font-size:10px;color:#806b74;margin-top:3px}
-.invoice-card-customer{font-size:11px;color:#6f1d45;font-weight:700;margin-top:7px}
-.invoice-card-thumbs{display:flex;gap:5px;margin:8px 0;align-items:center}
-.invoice-card-thumbs img{width:48px;height:48px;object-fit:contain;border:1px solid #ead8e0;border-radius:7px;background:#f7f2f4}
-.invoice-card-total{font-size:15px;font-weight:800;color:#9b2d62}
-.invoice-pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:12px}
-.invoice-pagination button{border:1px solid #ead5df;background:#fff;color:#5b1738;border-radius:8px;padding:7px 10px;font-weight:700;cursor:pointer}
-.invoice-pagination button.active{background:#9b2d62;color:#fff;border-color:#9b2d62}
-.edit-order-box{max-width:850px !important;text-align:left !important;max-height:92vh;overflow:auto}
-.edit-items-list{margin-top:8px;border:1px solid #ead8e0;border-radius:10px;overflow:auto}
-.edit-item{
-  display:grid;grid-template-columns:64px minmax(150px,1.3fr) minmax(100px,.9fr) 90px 75px 38px;
-  gap:7px;align-items:center;padding:8px;border-bottom:1px solid #eee3e7;min-width:650px;
-}
-.edit-item:last-child{border-bottom:0}
-.edit-item-thumb{width:56px;height:56px;object-fit:contain;border:1px solid #ead8e0;border-radius:8px;background:#f7f2f4}
-.edit-item input{width:100%;padding:7px;border:1px solid #e2ccd6;border-radius:7px;font-size:12px}
-.edit-item-label{font-size:9px;color:#806b74;margin-bottom:2px}
-.manual-total-strip{
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  font-size:13px;font-weight:800;color:#5b1738;margin-top:2px;
-}
-.manual-total-strip span:last-child{color:#9b2d62;font-size:16px}
-@media(max-width:900px){
-  .upcoming-grid,.invoice-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media(max-width:650px){
-  .admin-month-toolbar{align-items:stretch;flex-direction:column}
-  .admin-month-toolbar select{width:100%}
-  .upcoming-grid,.invoice-grid{grid-template-columns:1fr}
-  .edit-order-box{padding:14px !important}
-}
-
+/* viewport-fit */
+:root{--vh:1vh}body{min-height:calc(var(--vh) * 100)}
 </style>
 
 
@@ -2394,80 +2322,67 @@ body.manual-selection-active .bottom-cart{display:none}
 <!-- =========================================================
      ADMIN DASHBOARD
 ========================================================= -->
+<div class="pin-modal" id="customerDetailsModal">
+  <div class="pin-box" style="max-width:480px;text-align:left">
+    <h3 style="text-align:center">Order Details</h3>
+    <p style="text-align:center">Enter customer details. These details are saved to Google Sheets and are not included in the WhatsApp message.</p>
+    <div class="admin-form-grid" style="margin-top:10px">
+      <div class="admin-field"><label>Name *</label><input id="customerOrderName" placeholder="Customer name"></div>
+      <div class="admin-field"><label>Phone Number *</label><input id="customerOrderPhone" placeholder="Phone number"></div>
+      <div class="admin-field admin-full"><label>Address *</label><textarea id="customerOrderAddress" placeholder="Delivery address" style="min-height:75px"></textarea></div>
+    </div>
+    <div class="pin-actions"><button class="admin-btn" onclick="closeCustomerDetails()">Cancel</button><button class="admin-btn primary" onclick="confirmCustomerDetails()">Continue</button></div>
+  </div>
+</div>
+
 <div class="admin-screen" id="adminScreen">
   <div class="admin-wrap">
     <div class="admin-top">
       <div>
         <div class="admin-brand">🌸 Swapnali's Rangoli — Admin</div>
-        <div class="admin-sub">Orders, analytics and invoices are stored securely in Google Sheets.</div>
+        <div class="admin-sub">Orders, analytics and invoices are stored in Google Sheets.</div>
       </div>
-      <div class="admin-actions">
-        <button class="admin-btn" onclick="adminTab('dashboard')">Dashboard</button>
-        <button class="admin-btn" onclick="adminTab('orders')">Orders</button>
-        <button class="admin-btn" onclick="adminTab('neworder')">+ Manual Order</button>
-        <button class="admin-btn" onclick="adminTab('invoice')">Invoices</button>
+      <div class="admin-actions" id="adminActions">
+        <button class="admin-btn admin-tab-btn active" data-tab="dashboard" onclick="adminTab('dashboard')">Dashboard</button>
+        <button class="admin-btn admin-tab-btn" data-tab="orders" onclick="adminTab('orders')">Orders</button>
+        <button class="admin-btn admin-tab-btn" data-tab="neworder" onclick="adminTab('neworder')">+ Manual Order</button>
+        <button class="admin-btn admin-tab-btn" data-tab="invoice" onclick="adminTab('invoice')">Invoices</button>
+        <button class="admin-btn admin-tab-btn" data-tab="settings" onclick="adminTab('settings')">Settings</button>
         <button class="admin-btn" onclick="closeAdmin()">← Shop</button>
+        <select class="admin-filter" id="dashboardPeriod" onchange="setDashboardPeriod(this.value)" aria-label="Analytics period"></select>
       </div>
-    </div>
-
-    <div class="admin-nav">
-      <button class="admin-tab active" data-tab="dashboard" onclick="adminTab('dashboard')">📊 Analytics</button>
-      <button class="admin-tab" data-tab="orders" onclick="adminTab('orders')">🧾 Orders</button>
-      <button class="admin-tab" data-tab="neworder" onclick="adminTab('neworder')">➕ Manual Order</button>
-      <button class="admin-tab" data-tab="invoice" onclick="adminTab('invoice')">📄 Invoice</button>
-      <button class="admin-tab" data-tab="settings" onclick="adminTab('settings')">⚙️ Settings</button>
     </div>
 
     <section class="admin-panel active" id="admin-dashboard">
-      <div class="admin-month-toolbar">
-        <div>
-          <strong>Monthly Report</strong>
-          <span class="admin-mini">Track orders and sales by actual order date.</span>
-        </div>
-        <select id="dashboardMonth" onchange="renderAdminDashboard()"></select>
-      </div>
-
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="aTotalOrders">0</div><div class="stat-note" id="aOrdersNote">All recorded orders</div></div>
-        <div class="stat-card"><div class="stat-label">Total Sales</div><div class="stat-value" id="aSales">₹0</div><div class="stat-note" id="aSalesNote">Order value</div></div>
-        <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="aPending">0</div><div class="stat-note">New / confirmed / packed</div></div>
-        <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value" id="aDelivered">0</div><div class="stat-note">Completed orders</div></div>
-        <div class="stat-card"><div class="stat-label">Units Sold</div><div class="stat-value" id="aUnits">0</div><div class="stat-note">Total quantities</div></div>
+        <div class="stat-card"><div class="stat-label">Orders</div><div class="stat-value" id="aTotalOrders">0</div><div class="stat-note" id="aOrdersNote">All time</div></div>
+        <div class="stat-card"><div class="stat-label">Net Sales</div><div class="stat-value" id="aSales">₹0</div><div class="stat-note" id="aSalesNote">Final order value</div></div>
+        <div class="stat-card"><div class="stat-label">Advance Received</div><div class="stat-value" id="aAdvance">₹0</div><div class="stat-note">Actual recorded advance</div></div>
+        <div class="stat-card"><div class="stat-label">Balance Due</div><div class="stat-value" id="aBalance">₹0</div><div class="stat-note">Sales less advance</div></div>
+        <div class="stat-card"><div class="stat-label">Units Sold</div><div class="stat-value" id="aUnits">0</div><div class="stat-note">Non-cancelled orders</div></div>
       </div>
 
       <div class="admin-grid2">
-        <div class="admin-card"><h3>Order Status</h3><div id="statusSummary"></div></div>
-        <div class="admin-card"><h3>Top Designs</h3><div class="top-design-list" id="topDesigns"></div></div>
+        <div class="admin-card"><h3>Order Status</h3><div class="status-grid" id="statusSummary"></div></div>
+        <div class="admin-card"><h3>Sales Breakdown</h3><div id="salesBreakdown"></div></div>
       </div>
 
-      <div class="admin-card">
-        <h3>Upcoming Orders — Prepare & Dispatch</h3>
-        <div class="admin-mini" style="margin-bottom:8px">Dispatch window is 10–12 days after the actual order date.</div>
-        <div id="upcomingOrders"></div>
-      </div>
+      <div class="admin-card"><h3>Top Designs — Top 30</h3><div class="admin-mini" style="margin-bottom:7px">Click any design card to open an invoice containing that design.</div><div class="top-design-list" id="topDesigns"></div></div>
 
+      <div class="admin-card"><h3>Upcoming Orders — Prepare & Dispatch</h3><div class="admin-mini" style="margin-bottom:7px">Order number and customer are shown. Cards are coloured by order status.</div><div id="upcomingOrders"></div></div>
       <div class="admin-card"><h3>Recent Orders</h3><div class="order-table-wrap" id="recentOrders"></div></div>
     </section>
 
     <section class="admin-panel" id="admin-orders">
-      <div class="admin-card">
-        <h3>All Orders</h3>
-        <div class="search-row">
-          <input id="orderSearch" placeholder="Search order no, customer, phone or design..." oninput="renderOrdersTable()">
-          <select id="orderStatusFilter" onchange="renderOrdersTable()">
-            <option value="">All statuses</option><option>New</option><option>Confirmed</option><option>Packed</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option>
-          </select>
-          <select id="orderMonthFilter" onchange="renderOrdersTable()"></select>
-          <button class="admin-btn" onclick="exportOrders()">⬇ Export CSV</button>
-        </div>
-        <div class="order-table-wrap" id="ordersTable" style="margin-top:10px"></div>
-      </div>
+      <div class="admin-card"><h3>All Orders</h3><div class="search-row">
+        <input id="orderSearch" placeholder="Search order no, customer, phone or design..." oninput="renderOrdersTable()">
+        <select id="orderStatusFilter" onchange="renderOrdersTable()"><option value="">All statuses</option><option>New</option><option>Confirmed</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select>
+        <select id="orderMonthFilter" onchange="renderOrdersTable()"></select><button class="admin-btn" onclick="exportOrders()">⬇ Export CSV</button>
+      </div><div class="order-table-wrap" id="ordersTable" style="margin-top:10px"></div></div>
     </section>
 
     <section class="admin-panel" id="admin-neworder">
-      <div class="admin-card">
-        <h3>Manual Order</h3>
-        <p class="admin-mini">Create an order directly from the shopping catalogue. The actual Order Date controls the 10–12 day dispatch window and is shown on the invoice.</p>
+      <div class="admin-card"><h3>Manual Order</h3><p class="admin-mini">Create an order directly from the shopping catalogue.</p>
         <div class="admin-form-grid">
           <div class="admin-field"><label>Customer Name</label><input id="newCustomerName" placeholder="Customer name"></div>
           <div class="admin-field"><label>Phone Number</label><input id="newCustomerPhone" placeholder="WhatsApp / phone number"></div>
@@ -2476,77 +2391,43 @@ body.manual-selection-active .bottom-cart{display:none}
           <div class="admin-field"><label>Shipping Charges</label><input id="newShipping" type="number" min="0" value="0" oninput="syncNewOrderTotals()"></div>
           <div class="admin-field"><label>Discount Amount</label><input id="newDiscount" type="number" min="0" step="0.01" value="0" oninput="syncNewOrderTotals()"></div>
           <div class="admin-field"><label>Payment Status</label><select id="newPayment" onchange="handleNewPaymentChange()"><option>Pending</option><option>Advanced Received</option><option>Paid</option><option>Partially Paid</option><option>COD</option></select></div>
-          <div class="admin-field" id="newAdvancePaymentFields" style="display:none"><label>Advance Payment</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><input id="newAdvancePercent" type="number" min="0" max="100" step="0.01" placeholder="Advance %" oninput="syncNewAdvanceFromPercent()"><div class="admin-mini">Advance %</div></div><div><input id="newAdvanceAmount" type="number" min="0" step="0.01" placeholder="Amount received" oninput="syncNewAdvanceFromAmount()"><div class="admin-mini">Amount received</div></div></div><div id="newAdvanceSummary" class="admin-mini" style="margin-top:6px"></div></div>
-          <div class="admin-field"><label>Order Status</label><select id="newStatus"><option>New</option><option>Confirmed</option><option>Packed</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select></div>
-          <div class="admin-field admin-full"><label>Notes</label><textarea id="newNotes" placeholder="Shipping details, customer requests, payment notes..." style="min-height:70px"></textarea></div>
+          <div class="admin-field" id="newAdvancePaymentFields" style="display:none"><label>Advance Payment</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:7px"><input id="newAdvancePercent" type="number" min="0" max="100" step="0.01" placeholder="Advance %" oninput="syncNewAdvanceFromPercent()"><input id="newAdvanceAmount" type="number" min="0" step="0.01" placeholder="Amount received" oninput="syncNewAdvanceFromAmount()"></div><div id="newAdvanceSummary" class="admin-mini" style="margin-top:5px"></div></div>
+          <div class="admin-field"><label>Order Status</label><select id="newStatus"><option>New</option><option>Confirmed</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select></div>
+          <div class="admin-field admin-full"><label>Notes</label><textarea id="newNotes" placeholder="Shipping details, customer requests, payment notes..."></textarea></div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
-          <button class="admin-btn" onclick="addManualItem()">+ Add Item</button>
-          <button class="admin-btn primary" onclick="saveNewOrder()">💾 Save Order</button>
-          <button class="admin-btn" onclick="clearNewOrder()">Clear</button>
-          <div class="manual-total-strip" style="margin-left:auto;padding:8px 12px;border-radius:10px;background:#fff5f8;border:1px solid #ead8e0">
-            <span>Total Order Value:</span> <span id="newOrderTotalValue">₹0</span>
-          </div>
-        </div>
-        <div class="manual-order-preview" id="newOrderItems"><div class="empty-admin">No items yet. Click Add Item to choose designs from the shopping page.</div></div>
+        <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;align-items:center"><button class="admin-btn" onclick="addManualItem()">+ Add Item</button><button class="admin-btn primary" onclick="saveNewOrder()">💾 Save Order</button><button class="admin-btn" onclick="clearNewOrder()">Clear</button><div class="manual-total-strip" style="margin-left:auto;padding:7px 10px;border-radius:9px;background:#fff5f8;border:1px solid #ead8e0"><span>Total Order Value:</span> <span id="newOrderTotalValue">₹0</span></div></div>
+        <div class="manual-order-preview" id="newOrderItems"><div class="empty-admin">No items yet. Click Add Item to choose designs.</div></div>
       </div>
     </section>
 
-    <section class="admin-panel" id="admin-invoice">
-      <div class="admin-card">
-        <h3>Invoices</h3>
-        <div class="search-row">
-          <select id="invoiceOrderSelect" onchange="renderInvoice()"><option value="">Select an order to view invoice</option></select>
-          <select id="invoiceMonthFilter" onchange="renderInvoiceCards()"></select>
-          <button class="admin-btn" onclick="printInvoice()">🖨 Print / Save PDF</button>
-        </div>
-        <div class="invoice-grid" id="invoiceCards" style="margin-top:12px"></div>
-        <div class="invoice-pagination" id="invoicePagination"></div>
-        <div id="invoicePreview" style="margin-top:12px"><div class="empty-admin">Select an order above or click View Invoice on a card.</div></div>
-      </div>
-    </section>
+    <section class="admin-panel" id="admin-invoice"><div class="admin-card"><h3>Invoices</h3><div class="search-row"><select id="invoiceOrderSelect" onchange="renderInvoice()"><option value="">Select an order to view invoice</option></select><select id="invoiceMonthFilter" onchange="renderInvoiceCards()"></select><button class="admin-btn" onclick="printInvoice()">🖨 Print / Save PDF</button></div><div class="invoice-grid" id="invoiceCards" style="margin-top:10px"></div><div class="invoice-pagination" id="invoicePagination"></div><div id="invoicePreview" style="margin-top:10px"><div class="empty-admin">Select an order above or click an invoice card.</div></div></div></section>
 
-    <section class="admin-panel" id="admin-settings">
-      <div class="admin-card">
-        <h3>Dashboard Settings</h3>
-        <div class="admin-form-grid">
-          <div class="admin-field"><label>Business Name</label><input id="settingBusiness" value="Swapnali's Rangoli"></div>
-          <div class="admin-field"><label>Admin PIN</label><input id="settingPin" type="password" placeholder="Change PIN"></div>
-          <div class="admin-field admin-full"><label>Invoice Footer</label><input id="settingFooter" value="Thank you for your order! 🌸"></div>
-        </div>
-        <div style="margin-top:10px"><button class="admin-btn primary" onclick="saveAdminSettings()">Save Settings</button> <button class="admin-btn danger" onclick="clearAllOrders()">Delete All Recorded Orders</button></div>
-        <p class="admin-mini" style="margin-top:10px">Orders are stored in Google Sheets through Google Apps Script, so the same records can be viewed from different devices. The admin PIN is verified by the Apps Script backend.</p>
-      </div>
-    </section>
+    <section class="admin-panel" id="admin-settings"><div class="admin-card"><h3>Dashboard Settings</h3><div class="admin-form-grid"><div class="admin-field"><label>Business Name</label><input id="settingBusiness" value="Swapnali's Rangoli"></div><div class="admin-field"><label>Admin PIN</label><input id="settingPin" type="password" placeholder="Change PIN"></div><div class="admin-field admin-full"><label>Invoice Footer</label><input id="settingFooter" value="Thank you for your order! 🌸"></div></div><div style="margin-top:9px"><button class="admin-btn primary" onclick="saveAdminSettings()">Save Settings</button> <button class="admin-btn danger" onclick="clearAllOrders()">Delete All Recorded Orders</button></div><p class="admin-mini" style="margin-top:9px">Orders are stored in Google Sheets through Google Apps Script.</p></div></section>
   </div>
 </div>
 
 <div class="pin-modal" id="editOrderModal">
   <div class="pin-box edit-order-box">
-    <h3>Edit Order</h3>
-    <p class="admin-mini">You can edit customer details, actual order date, status, payment, shipping, notes, and every existing item. Add or remove items as required.</p>
-    <input type="hidden" id="editOrderId">
-    <div class="admin-form-grid" style="margin-top:10px">
-      <div class="admin-field"><label>Customer Name</label><input id="editCustomerName" placeholder="Customer name"></div>
-      <div class="admin-field"><label>Phone Number</label><input id="editCustomerPhone" placeholder="WhatsApp / phone number"></div>
-      <div class="admin-field admin-full"><label>Address</label><textarea id="editCustomerAddress" placeholder="Delivery address" style="min-height:65px"></textarea></div>
-      <div class="admin-field"><label>Actual Order Date</label><input id="editOrderDate" type="date"></div>
-      <div class="admin-field"><label>Shipping Charges</label><input id="editShipping" type="number" min="0" value="0" oninput="syncEditAdvanceFromPercent()"></div>
-          <div class="admin-field"><label>Discount Amount</label><input id="editDiscount" type="number" min="0" step="0.01" value="0" oninput="syncEditAdvanceFromPercent()"></div>
-      <div class="admin-field"><label>Order Status</label><select id="editStatus"><option>New</option><option>Confirmed</option><option>Packed</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select></div>
-      <div class="admin-field"><label>Payment Status</label><select id="editPayment" onchange="handleEditPaymentChange()"><option>Pending</option><option>Advanced Received</option><option>Paid</option><option>Partially Paid</option><option>COD</option></select></div>
-      <div class="admin-field" id="editAdvancePaymentFields" style="display:none"><label>Advance Payment</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><input id="editAdvancePercent" type="number" min="0" max="100" step="0.01" placeholder="Advance %" oninput="syncEditAdvanceFromPercent()"><div class="admin-mini">Advance %</div></div><div><input id="editAdvanceAmount" type="number" min="0" step="0.01" placeholder="Amount received" oninput="syncEditAdvanceFromAmount()"><div class="admin-mini">Amount received</div></div></div><div id="editAdvanceSummary" class="admin-mini" style="margin-top:6px"></div></div>
-      <div class="admin-field admin-full"><label>Notes</label><textarea id="editNotes" placeholder="Notes" style="min-height:65px"></textarea></div>
+    <div class="edit-order-header"><h3>Edit Order</h3><p class="admin-mini">Edit customer/order details and modify items using the same preview-style cards used for the shopping cart.</p></div>
+    <div class="edit-order-scroll">
+      <input type="hidden" id="editOrderId">
+      <div class="admin-form-grid">
+        <div class="admin-field"><label>Customer Name</label><input id="editCustomerName" placeholder="Customer name"></div>
+        <div class="admin-field"><label>Phone Number</label><input id="editCustomerPhone" placeholder="Phone number"></div>
+        <div class="admin-field admin-full"><label>Address</label><textarea id="editCustomerAddress" placeholder="Delivery address"></textarea></div>
+        <div class="admin-field"><label>Actual Order Date</label><input id="editOrderDate" type="date"></div>
+        <div class="admin-field"><label>Shipping Charges</label><input id="editShipping" type="number" min="0" value="0" oninput="syncEditAdvanceFromPercent()"></div>
+        <div class="admin-field"><label>Discount Amount</label><input id="editDiscount" type="number" min="0" step="0.01" value="0" oninput="syncEditAdvanceFromPercent()"></div>
+        <div class="admin-field"><label>Order Status</label><select id="editStatus"><option>New</option><option>Confirmed</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select></div>
+        <div class="admin-field"><label>Payment Status</label><select id="editPayment" onchange="handleEditPaymentChange()"><option>Pending</option><option>Advanced Received</option><option>Paid</option><option>Partially Paid</option><option>COD</option></select></div>
+        <div class="admin-field" id="editAdvancePaymentFields" style="display:none"><label>Advance Payment</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:7px"><input id="editAdvancePercent" type="number" min="0" max="100" step="0.01" placeholder="Advance %" oninput="syncEditAdvanceFromPercent()"><input id="editAdvanceAmount" type="number" min="0" step="0.01" placeholder="Amount received" oninput="syncEditAdvanceFromAmount()"></div><div id="editAdvanceSummary" class="admin-mini" style="margin-top:5px"></div></div>
+        <div class="admin-field admin-full"><label>Notes</label><textarea id="editNotes" placeholder="Notes"></textarea></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:7px;margin-top:11px"><strong style="color:#5b1738">Order Items</strong><button class="admin-btn" onclick="addEditItemManually()">+ Add Item</button></div>
+      <div class="edit-preview-grid" id="editOrderItems"></div>
+      <div class="manual-total-strip" style="justify-content:flex-end;margin-top:10px"><span>Grand Total:</span> <span id="editOrderTotalValue">₹0</span></div>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px">
-      <strong style="color:#5b1738">Order Items</strong>
-      <button class="admin-btn" onclick="addEditItemManually()">+ Add Item</button>
-    </div>
-    <div class="edit-items-list" id="editOrderItems"></div>
-    <div class="pin-actions" style="margin-top:12px">
-      <button class="admin-btn" onclick="hideEditOrder()">Cancel</button>
-      <button class="admin-btn primary" onclick="saveEditedOrder()">Save Order</button>
-    </div>
+    <div class="edit-sticky-actions"><button class="admin-btn" onclick="hideEditOrder()">Cancel</button><button class="admin-btn primary" onclick="saveEditedOrder()">Save Order</button></div>
   </div>
 </div>
 
@@ -2566,6 +2447,11 @@ body.manual-selection-active .bottom-cart{display:none}
 let designs = [];
 
 const cart = {};
+let pendingCustomerOrderMode="";
+function fitViewport(){document.documentElement.style.setProperty("--vh",(window.innerHeight*0.01)+"px");}
+window.addEventListener("resize",fitViewport,{passive:true});
+window.addEventListener("orientationchange",fitViewport,{passive:true});
+fitViewport();
 
 
 /* =========================================================
@@ -2823,11 +2709,9 @@ function setupImageFallback(
   filename
 ) {
 
-  img.src =
-    "Images/" +
-    encodeURIComponent(
-      filename
-    );
+  const base="https://raw.githubusercontent.com/Rangoli-Designs-By-Swapnali/Rangoli_Dashboard/main/Images/";
+  const clean=String(filename||"").split("/").pop();
+  img.src=base+encodeURIComponent(clean);
 
 
   img.onerror =
@@ -3759,7 +3643,11 @@ let orderSaving = false;
 
 function resolveImageUrl(src) {
   if (!src) return "";
-  try { return new URL(src, document.baseURI).href; } catch (e) { return String(src); }
+  const value=String(src).trim();
+  if(/^https?:\/\//i.test(value)) return value;
+  const filename=value.split("/").pop();
+  if(filename) return "https://raw.githubusercontent.com/Rangoli-Designs-By-Swapnali/Rangoli_Dashboard/main/Images/"+encodeURIComponent(filename);
+  try { return new URL(value, document.baseURI).href; } catch(e) { return value; }
 }
 
 function getCartOrderItems() {
@@ -3802,51 +3690,48 @@ function buildWhatsAppMessage(items) {
   return message;
 }
 
-function placeOrder() {
-  if (orderSaving) return;
-  const items = getCartOrderItems();
-  if (!items.length) {
-    alert("Please select at least one design before placing your order.");
-    return;
-  }
-
-  const orderId = "o_" + Date.now() + Math.random().toString(36).slice(2, 8);
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const orderNo = "";
-  const order = {
-    id: orderId,
-    orderNo,
-    orderDate: localDateKey(new Date()),
-    createdAt: new Date().toISOString(),
-    customerName: "",
-    phone: "",
-    address: "",
-    shipping: 0,
-    status: "New",
-    payment: "Pending",
-    notes: "Created automatically from the shopping page.",
-    items,
-    subtotal,
-    total: subtotal
-  };
-
-  const whatsappURL = "https://wa.me/917972313283?text=" + encodeURIComponent(buildWhatsAppMessage(items));
-  window.open(whatsappURL, "_blank");
-
-  orderSaving = true;
-  apiCall("saveOrder", {order: JSON.stringify(order)}, (result) => {
-    orderSaving = false;
-    if (!result) return;
-    Object.keys(cart).forEach(k => delete cart[k]);
-    designs.forEach(d => d.variants.forEach((v, vi) => updateVariantUI(d.id, vi)));
-    designs.forEach(d => updateCardSelection(d.id));
-    updateCart();
-    hideCartModal();
-    adminOrders = result.orders || adminOrders;
-    const saved = adminOrders.find(x => x.id === orderId);
-    alert(`Order ${saved?.orderNo || "R-?"} has been recorded automatically in Google Sheets.`);
+function placeOrder(){
+  if(orderSaving)return;
+  const items=getCartOrderItems();
+  if(!items.length){alert("Please select at least one design before placing your order.");return}
+  pendingCustomerOrderMode="whatsapp";
+  openCustomerDetails();
+}
+function openCustomerDetails(){
+  const m=document.getElementById("customerDetailsModal");
+  if(!m)return;
+  m.classList.add("show");
+  setTimeout(()=>document.getElementById("customerOrderName")?.focus(),80);
+}
+function closeCustomerDetails(){document.getElementById("customerDetailsModal")?.classList.remove("show")}
+function confirmCustomerDetails(){
+  const name=document.getElementById("customerOrderName").value.trim();
+  const phone=document.getElementById("customerOrderPhone").value.trim();
+  const address=document.getElementById("customerOrderAddress").value.trim();
+  if(!name||!phone||!address){alert("Please enter Name, Phone Number and Address.");return}
+  const items=getCartOrderItems(); if(!items.length){closeCustomerDetails();alert("Your cart is empty.");return}
+  const orderId="o_"+Date.now()+Math.random().toString(36).slice(2,8);
+  const subtotal=items.reduce((sum,item)=>sum+item.price*item.quantity,0);
+  const order={id:orderId,orderNo:"",orderDate:localDateKey(new Date()),createdAt:new Date().toISOString(),customerName:name,phone:phone,address:address,shipping:0,status:"New",payment:"Pending",advancePercent:0,advanceAmount:0,discount:0,notes:"Created from shopping page.",items,subtotal,total:subtotal};
+  closeCustomerDetails();
+  orderSaving=true;
+  apiCall("saveOrder",{order:JSON.stringify(order)},result=>{
+    orderSaving=false;
+    if(!result)return;
+    adminOrders=result.orders||adminOrders;
+    const saved=adminOrders.find(x=>x.id===orderId);
+    if(pendingCustomerOrderMode==="whatsapp"){
+      const whatsappURL="https://wa.me/917972313283?text="+encodeURIComponent(buildWhatsAppMessage(items));
+      window.open(whatsappURL,"_blank");
+    }
+    Object.keys(cart).forEach(k=>delete cart[k]);
+    designs.forEach(d=>d.variants.forEach((v,vi)=>updateVariantUI(d.id,vi)));
+    designs.forEach(d=>updateCardSelection(d.id));
+    updateCart();hideCartModal();pendingCustomerOrderMode="";
+    alert(`Order ${saved?.orderNo||"R-?"} has been recorded in Google Sheets.`);
   });
 }
+
 
 /* =========================================================
    CLOSE MODAL BY CLICKING OUTSIDE
@@ -3982,100 +3867,48 @@ function closeAdmin(){
 }
 function adminTab(tab){
   document.querySelectorAll(".admin-panel").forEach(x=>x.classList.remove("active"));
-  document.querySelectorAll(".admin-tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===tab));
+  document.querySelectorAll(".admin-tab-btn").forEach(x=>x.classList.toggle("active",x.dataset.tab===tab));
   const p=document.getElementById("admin-"+tab);if(p)p.classList.add("active");
-  if(tab==="dashboard"){populateMonthFilters();renderAdminDashboard()}
+  if(tab==="dashboard")renderAdminDashboard();
   if(tab==="orders"){populateMonthFilters();renderOrdersTable()}
   if(tab==="neworder"){if(document.getElementById("newOrderDate")&&!document.getElementById("newOrderDate").value)document.getElementById("newOrderDate").value=localDateKey(new Date());renderNewOrderItems()}
   if(tab==="invoice"){populateInvoiceSelect();renderInvoiceCards()}
   if(tab==="settings")loadAdminSettingsForm();
 }
 function refreshAdmin(){
-  if(adminLoading)return;
-  adminLoading=true;
-  apiCall("listOrders",{},result=>{
-    adminLoading=false;
-    if(result){
-      adminOrders=Array.isArray(result.orders)?result.orders:[];
-      adminSettings=result.settings||adminSettings;
-      populateMonthFilters();
-      renderAdminDashboard();renderOrdersTable();populateInvoiceSelect();renderInvoiceCards();loadAdminSettingsForm();
-    }
-  });
+  if(adminLoading)return; adminLoading=true;
+  apiCall("listOrders",{},result=>{adminLoading=false;if(result){adminOrders=Array.isArray(result.orders)?result.orders:[];adminSettings=result.settings||adminSettings;populateMonthFilters();populateDashboardPeriod();renderAdminDashboard();renderOrdersTable();populateInvoiceSelect();renderInvoiceCards();loadAdminSettingsForm();}});
 }
-function getMonthKeys(){
-  const set=new Set([localDateKey(new Date()).slice(0,7)]);
-  adminOrders.forEach(o=>{const k=orderDateKey(o);if(k)set.add(k.slice(0,7))});
-  return Array.from(set).sort().reverse();
-}
-function fillMonthSelect(id,allText){
-  const el=document.getElementById(id);if(!el)return;
-  const current=el.value;
-  const keys=getMonthKeys();
-  el.innerHTML=`<option value="">${allText||"All Months"}</option>`+keys.map(k=>`<option value="${k}">${adminEsc(monthLabel(k))}</option>`).join("");
-  if(keys.includes(current))el.value=current;
-}
-function populateMonthFilters(){
-  const dash=document.getElementById("dashboardMonth");
-  if(dash && !dash.value)dash.value=localDateKey(new Date()).slice(0,7);
-  fillMonthSelect("dashboardMonth","Current Month / Select");
-  if(dash && !dash.value)dash.value=localDateKey(new Date()).slice(0,7);
-  fillMonthSelect("orderMonthFilter","All months");
-  fillMonthSelect("invoiceMonthFilter","All months");
-}
-function filterByMonth(list,key){
-  if(!key)return list.slice();
-  return list.filter(o=>orderDateKey(o).slice(0,7)===key);
-}
+function getMonthKeys(){const set=new Set();adminOrders.forEach(o=>{const k=orderDateKey(o);if(k)set.add(k.slice(0,7))});if(!set.size)set.add(localDateKey(new Date()).slice(0,7));return Array.from(set).sort().reverse()}
+function getYearKeys(){const set=new Set();adminOrders.forEach(o=>{const k=orderDateKey(o);if(k)set.add(k.slice(0,4))});set.add(String(new Date().getFullYear()));return Array.from(set).sort().reverse()}
+function populateDashboardPeriod(){const el=document.getElementById("dashboardPeriod");if(!el)return;const old=el.value||"all";const months=getMonthKeys(),years=getYearKeys();el.innerHTML='<option value="all">All Time</option><option value="month:'+localDateKey(new Date()).slice(0,7)+'">Monthly — Current</option><option value="year:'+new Date().getFullYear()+'">Yearly — Current</option><option disabled>──────────</option>'+months.map(k=>`<option value="month:${k}">Monthly — ${adminEsc(monthLabel(k))}</option>`).join("")+years.map(y=>`<option value="year:${y}">Yearly — ${y}</option>`).join("");if(Array.from(el.options).some(o=>o.value===old))el.value=old;else el.value="all"}
+function setDashboardPeriod(v){renderAdminDashboard()}
+function fillMonthSelect(id,allText){const el=document.getElementById(id);if(!el)return;const current=el.value;const keys=getMonthKeys();el.innerHTML=`<option value="">${allText||"All Months"}</option>`+keys.map(k=>`<option value="${k}">${adminEsc(monthLabel(k))}</option>`).join("");if(keys.includes(current))el.value=current}
+function populateMonthFilters(){fillMonthSelect("orderMonthFilter","All months");fillMonthSelect("invoiceMonthFilter","All months");populateDashboardPeriod()}
+function dashboardScopedOrders(){const v=document.getElementById("dashboardPeriod")?.value||"all";if(v==="all")return adminOrders.slice();if(v.startsWith("month:"))return filterByMonth(adminOrders,v.slice(6));if(v.startsWith("year:")){const y=v.slice(5);return adminOrders.filter(o=>orderDateKey(o).slice(0,4)===y)}return adminOrders.slice()}
+function dashboardPeriodLabel(){const v=document.getElementById("dashboardPeriod")?.value||"all";if(v==="all")return "All time";if(v.startsWith("month:"))return monthLabel(v.slice(6));if(v.startsWith("year:"))return v.slice(5);return "All time"}
 function renderAdminDashboard(){
-  const month=document.getElementById("dashboardMonth")?.value||localDateKey(new Date()).slice(0,7);
-  const scoped=filterByMonth(adminOrders,month);
-  const active=scoped.filter(o=>o.status!=="Cancelled");
-  const sales=active.reduce((a,o)=>a+Number(o.total||0),0);
-  const pending=scoped.filter(o=>["New","Confirmed","Packed"].includes(o.status)).length;
-  const delivered=scoped.filter(o=>o.status==="Delivered").length;
-  const units=active.reduce((a,o)=>a+(o.items||[]).reduce((b,i)=>b+Number(i.quantity||0),0),0);
-  document.getElementById("aTotalOrders").textContent=scoped.length;
-  document.getElementById("aSales").textContent=adminMoney(sales);
-  document.getElementById("aPending").textContent=pending;
-  document.getElementById("aDelivered").textContent=delivered;
-  document.getElementById("aUnits").textContent=units;
-  document.getElementById("aOrdersNote").textContent=`${monthLabel(month)} order count`;
-  document.getElementById("aSalesNote").textContent=`${monthLabel(month)} order value`;
-
-  const statuses=["New","Confirmed","Packed","Dispatched","Delivered","Cancelled"];
-  document.getElementById("statusSummary").innerHTML=statuses.map(st=>`<div style="display:flex;justify-content:space-between;align-items:center;margin:7px 0"><span class="status-pill status-${st}">${st}</span><strong>${scoped.filter(o=>o.status===st).length}</strong></div>`).join("");
-
-  const counts={};
-  active.forEach(o=>(o.items||[]).forEach(i=>{
-    const k=i.design+" — "+i.size;counts[k]=(counts[k]||0)+Number(i.quantity||0)
-  }));
-  const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  document.getElementById("topDesigns").innerHTML=top.length?top.map(([k,v])=>`<div class="top-design"><span>${adminEsc(k)}</span><strong>${v}</strong></div>`).join(""):"<div class='empty-admin'>No orders recorded for this month.</div>";
-
-  const upcoming=adminOrders.filter(o=>!["Delivered","Cancelled"].includes(o.status)).sort((a,b)=>orderDateKey(a).localeCompare(orderDateKey(b))).slice(0,9);
-  document.getElementById("upcomingOrders").innerHTML=renderUpcomingOrders(upcoming);
-
-  const recent=adminOrders.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,8);
-  document.getElementById("recentOrders").innerHTML=renderOrderTableHTML(recent,false)||"<div class='empty-admin'>No orders recorded yet.</div>";
+  populateDashboardPeriod();
+  const scoped=dashboardScopedOrders();
+  const active=scoped.filter(o=>String(o.status||"")!=="Cancelled");
+  const totalOrders=scoped.length, sales=active.reduce((a,o)=>a+Number(o.total||0),0), advance=active.reduce((a,o)=>a+Number(o.advanceAmount||0),0), balance=Math.max(0,sales-advance), units=active.reduce((a,o)=>a+(o.items||[]).reduce((b,i)=>b+Number(i.quantity||0),0),0);
+  document.getElementById("aTotalOrders").textContent=totalOrders;document.getElementById("aSales").textContent=adminMoney(sales);document.getElementById("aAdvance").textContent=adminMoney(advance);document.getElementById("aBalance").textContent=adminMoney(balance);document.getElementById("aUnits").textContent=units;
+  const label=dashboardPeriodLabel();document.getElementById("aOrdersNote").textContent=label+" orders";document.getElementById("aSalesNote").textContent=label+" final value";
+  const statuses=["New","Confirmed","Dispatched","Delivered","Cancelled"];
+  document.getElementById("statusSummary").innerHTML=statuses.map(st=>`<div class="status-card status-${st}" onclick="openStatusInvoices('${st}')"><span class="status-pill status-${st}">${st}</span><span class="status-count">${scoped.filter(o=>o.status===st).length}</span></div>`).join("");
+  const discount=active.reduce((a,o)=>a+Number(o.discount||0),0),shipping=active.reduce((a,o)=>a+Number(o.shipping||0),0),subtotal=active.reduce((a,o)=>a+Number(o.subtotal||0),0);
+  document.getElementById("salesBreakdown").innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px"><div class="stat-card"><div class="stat-label">Items Total</div><div class="stat-value">${adminMoney(subtotal)}</div></div><div class="stat-card"><div class="stat-label">Discount</div><div class="stat-value">${adminMoney(discount)}</div></div><div class="stat-card"><div class="stat-label">Shipping</div><div class="stat-value">${adminMoney(shipping)}</div></div><div class="stat-card"><div class="stat-label">Cancelled Value</div><div class="stat-value">${adminMoney(scoped.filter(o=>o.status==='Cancelled').reduce((a,o)=>a+Number(o.total||0),0))}</div></div></div>`;
+  const counts={};active.forEach(o=>(o.items||[]).forEach(i=>{const k=i.design+" — "+i.size;if(!counts[k])counts[k]={qty:0,image:i.image,design:i.design,size:i.size};counts[k].qty+=Number(i.quantity||0)}));
+  const top=Object.values(counts).sort((a,b)=>b.qty-a.qty).slice(0,30);
+  document.getElementById("topDesigns").innerHTML=top.length?top.map((x,idx)=>`<div class="top-design" title="${adminEsc(x.design)} — ${adminEsc(x.size)}" onclick="openTopDesignInvoice('${adminEsc(x.design)}','${adminEsc(x.size)}')"><img src="${adminEsc(resolveImageUrl(x.image||''))}" alt=""><div class="top-design-name">${adminEsc(x.design)} · ${adminEsc(x.size)}</div><div class="top-design-count">${x.qty}</div></div>`).join(""):"<div class='empty-admin' style='grid-column:1/-1'>No sales for this period.</div>";
+  const upcoming=adminOrders.filter(o=>!['Delivered','Cancelled'].includes(o.status)).sort((a,b)=>orderDateKey(a).localeCompare(orderDateKey(b))).slice(0,9);document.getElementById("upcomingOrders").innerHTML=renderUpcomingOrders(upcoming);
+  const recent=adminOrders.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,8);document.getElementById("recentOrders").innerHTML=renderOrderTableHTML(recent,false)||"<div class='empty-admin'>No orders recorded yet.</div>";
 }
-function renderUpcomingOrders(list){
-  if(!list.length)return "<div class='empty-admin'>No upcoming orders.</div>";
-  const today=localDateKey(new Date());
-  return `<div class="upcoming-grid">${list.map(o=>{
-    const dk=orderDateKey(o);
-    const overdue=dk&&dk<today&&o.status!=="Dispatched";
-    const thumbs=(o.items||[]).slice(0,4).map(i=>i.image?`<img src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"").join("");
-    const more=(o.items||[]).length>4?`<span class="upcoming-more">+${o.items.length-4}</span>`:"";
-    return `<div class="upcoming-card">
-      <div class="upcoming-head"><div><div class="upcoming-order-no">${adminEsc(o.orderNo)}</div><div class="upcoming-date">Order date: ${prettyDate(dk)}</div></div><span class="status-pill status-${adminEsc(o.status)}">${adminEsc(o.status)}</span></div>
-      <div class="upcoming-thumbs">${thumbs}${more}</div>
-      <div class="upcoming-customer">${adminEsc(o.customerName||"Walk-in")} · ${adminEsc(o.phone||"")}</div>
-      <div class="upcoming-date">${overdue?"⚠️ Dispatch window started:":"Dispatch window:"} ${dispatchRange(dk)}</div>
-      <div class="upcoming-total">${adminMoney(o.total)}</div>
-    </div>`;
-  }).join("")}</div>`;
-}
+function openStatusInvoices(status){adminTab('invoice');setTimeout(()=>{const list=adminOrders.filter(o=>o.status===status);renderInvoiceCards(list);},0)}
+function openTopDesignInvoice(design,size){const o=dashboardScopedOrders().find(o=>o.status!=="Cancelled"&&(o.items||[]).some(i=>i.design===design&&i.size===size));if(o)viewInvoice(o.id);else alert("No invoice found for this design in the selected period.")}
+function renderUpcomingOrders(list){if(!list.length)return "<div class='empty-admin'>No upcoming orders.</div>";return `<div class="upcoming-grid">${list.map(o=>{const dk=orderDateKey(o),thumbs=(o.items||[]).slice(0,4).map(i=>i.image?`<img src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"").join(""),more=(o.items||[]).length>4?`<span class="upcoming-more">+${o.items.length-4}</span>`:"";return `<div class="upcoming-card status-${adminEsc(o.status)}" onclick="viewInvoice('${adminEsc(o.id)}')"><div class="upcoming-head"><div><div class="upcoming-order-no">${adminEsc(o.orderNo)}</div><div class="upcoming-customer">${adminEsc(o.customerName||'Walk-in')}</div></div><span class="status-pill status-${adminEsc(o.status)}">${adminEsc(o.status)}</span></div><div class="upcoming-thumbs">${thumbs}${more}</div><div class="upcoming-date">Dispatch: ${adminEsc(dispatchRange(dk))}</div><div class="upcoming-total">${adminMoney(o.total)}</div></div>`}).join("")}</div>`}
+function filterByMonth(list,key){if(!key)return list.slice();return list.filter(o=>orderDateKey(o).slice(0,7)===key)}
+
 function renderOrderTableHTML(list,all){
   if(!list.length)return"";
   return `<table class="order-table"><thead><tr><th>Order</th><th>Order Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th>${all?"<th>Actions</th>":""}</tr></thead><tbody>${list.map(o=>{
@@ -4088,7 +3921,7 @@ function renderOrderTableHTML(list,all){
       <td><div class="admin-thumb-stack">${thumbs}${more}</div><span class="admin-mini">${(o.items||[]).reduce((a,i)=>a+Number(i.quantity||0),0)} units</span></td>
       <td>${adminMoney(o.total)}</td>
       <td><select onchange="changeOrderStatus('${adminEsc(o.id)}',this.value)" style="padding:5px;border:1px solid #ead5df;border-radius:7px;font-size:10px">
-        ${["New","Confirmed","Packed","Dispatched","Delivered","Cancelled"].map(st=>`<option ${o.status===st?"selected":""}>${st}</option>`).join("")}
+        ${["New","Confirmed","Dispatched","Delivered","Cancelled"].map(st=>`<option ${o.status===st?"selected":""}>${st}</option>`).join("")}
       </select></td>
       ${all?`<td><button class="admin-btn" style="padding:5px 7px" onclick="editOrder('${adminEsc(o.id)}')">Edit</button> <button class="admin-btn" style="padding:5px 7px" onclick="viewInvoice('${adminEsc(o.id)}')">Invoice</button> <button class="admin-btn danger" style="padding:5px 7px" onclick="deleteOrder('${adminEsc(o.id)}')">Delete</button></td>`:""}
     </tr>`;
@@ -4109,89 +3942,24 @@ function changeOrderStatus(id,status){
 
 function editOrder(id){
   const o=adminOrders.find(x=>x.id===id);if(!o)return;
-  document.getElementById("editOrderId").value=o.id;
-  document.getElementById("editCustomerName").value=o.customerName||"";
-  document.getElementById("editCustomerPhone").value=o.phone||"";
-  document.getElementById("editCustomerAddress").value=o.address||"";
-  document.getElementById("editOrderDate").value=dateInputValue(orderDateKey(o));
-  document.getElementById("editShipping").value=Number(o.shipping||0);
-  document.getElementById("editStatus").value=o.status||"New";
-  document.getElementById("editPayment").value=o.payment||"Pending";
-  document.getElementById("editAdvancePercent").value=Number(o.advancePercent||0)||"";
-  document.getElementById("editAdvanceAmount").value=Number(o.advanceAmount||0)||"";
-  handleEditPaymentChange();
-  document.getElementById("editNotes").value=o.notes||"";
-  editOrderItemsDraft=(o.items||[]).map(i=>({...i}));
-  renderEditOrderItems();
-  document.getElementById("editOrderModal").classList.add("show");
+  document.getElementById("editOrderId").value=o.id;document.getElementById("editCustomerName").value=o.customerName||"";document.getElementById("editCustomerPhone").value=o.phone||"";document.getElementById("editCustomerAddress").value=o.address||"";document.getElementById("editOrderDate").value=dateInputValue(orderDateKey(o));document.getElementById("editShipping").value=Number(o.shipping||0);document.getElementById("editDiscount").value=Number(o.discount||0);document.getElementById("editStatus").value=o.status||"New";document.getElementById("editPayment").value=o.payment||"Pending";document.getElementById("editAdvancePercent").value=Number(o.advancePercent||0)||"";document.getElementById("editAdvanceAmount").value=Number(o.advanceAmount||0)||"";handleEditPaymentChange();document.getElementById("editNotes").value=o.notes||"";editOrderItemsDraft=(o.items||[]).map(i=>({...i}));renderEditOrderItems();document.getElementById("editOrderModal").classList.add("show");
 }
 function hideEditOrder(){document.getElementById("editOrderModal").classList.remove("show")}
 function renderEditOrderItems(){
   const box=document.getElementById("editOrderItems");
-  if(!editOrderItemsDraft.length){box.innerHTML="<div class='empty-admin'>No items. Use + Add Item.</div>";return}
-  box.innerHTML=editOrderItemsDraft.map((x,i)=>`
-    <div class="edit-item">
-      <img class="edit-item-thumb" id="edit-thumb-${i}" alt="">
-      <div><div class="edit-item-label">Design</div><input value="${adminEsc(x.design)}" onchange="editDraftField(${i},'design',this.value)"></div>
-      <div><div class="edit-item-label">Size</div><input value="${adminEsc(x.size)}" onchange="editDraftField(${i},'size',this.value)"></div>
-      <div><div class="edit-item-label">Price</div><input type="number" min="0" value="${Number(x.price)||0}" onchange="editDraftField(${i},'price',this.value)"></div>
-      <div><div class="edit-item-label">Qty</div><input type="number" min="1" value="${Number(x.quantity)||1}" onchange="editDraftField(${i},'quantity',this.value)"></div>
-      <button class="admin-remove" title="Remove item" onclick="removeEditItem(${i})">×</button>
-      <div style="grid-column:2/-1"><div class="edit-item-label">Image URL / filename</div><input value="${adminEsc(x.image||"")}" onchange="editDraftField(${i},'image',this.value);renderEditOrderItems()"></div>
-    </div>`).join("");
-  editOrderItemsDraft.forEach((x,i)=>{
-    const img=document.getElementById("edit-thumb-"+i);
-    if(img){
-      img.src=resolveImageUrl(x.image||"");
-      img.onerror=()=>{img.onerror=null;setupImageFallback(img,x.image||"")}
-    }
-  });
+  if(!editOrderItemsDraft.length){box.innerHTML="<div class='empty-admin' style='grid-column:1/-1'>No items. Use + Add Item.</div>";document.getElementById("editOrderTotalValue").textContent=adminMoney(editOrderItemsTotal());return}
+  box.innerHTML=editOrderItemsDraft.map((x,i)=>`<div class="edit-item-card"><button class="edit-remove" onclick="removeEditItem(${i})">×</button><img id="edit-thumb-${i}" alt="${adminEsc(x.design||'Design')}"><div class="edit-item-grid"><div><label>Design</label><input value="${adminEsc(x.design||'')}" onchange="editDraftField(${i},'design',this.value)"></div><div><label>Size</label><input value="${adminEsc(x.size||'')}" onchange="editDraftField(${i},'size',this.value)"></div><div><label>Price</label><input type="number" min="0" value="${Number(x.price)||0}" onchange="editDraftField(${i},'price',this.value);renderEditOrderItems()"></div><div><label>Quantity</label><input type="number" min="1" value="${Number(x.quantity)||1}" onchange="editDraftField(${i},'quantity',this.value);renderEditOrderItems()"></div><div style="grid-column:1/-1"><label>Image URL / filename</label><input value="${adminEsc(x.image||'')}" onchange="editDraftField(${i},'image',this.value);renderEditOrderItems()"></div></div><div class="manual-total-strip" style="justify-content:space-between;margin-top:6px"><span>Subtotal</span><span>${adminMoney((Number(x.price)||0)*(Number(x.quantity)||0))}</span></div></div>`).join("");
+  editOrderItemsDraft.forEach((x,i)=>{const img=document.getElementById("edit-thumb-"+i);if(img){img.src=resolveImageUrl(x.image||"");img.onerror=()=>{img.onerror=null;setupImageFallback(img,x.image||"")}}});document.getElementById("editOrderTotalValue").textContent=adminMoney(editOrderItemsTotal());
 }
-function editDraftField(i,key,value){
-  if(!editOrderItemsDraft[i])return;
-  editOrderItemsDraft[i][key]=(key==="price"||key==="quantity")?Number(value):value;
-}
+function editDraftField(i,key,value){if(!editOrderItemsDraft[i])return;editOrderItemsDraft[i][key]=(key==="price"||key==="quantity")?Number(value):value;document.getElementById("editOrderTotalValue").textContent=adminMoney(editOrderItemsTotal())}
 function removeEditItem(i){editOrderItemsDraft.splice(i,1);renderEditOrderItems()}
-function addEditItemManually(){
-  itemSelectionMode="edit";
-  manualSelectionSavedCart=copyCart(cart);
-  replaceCart({});
-  manualItemSelectionActive=true;
-  document.getElementById("editOrderModal").classList.remove("show");
-  document.getElementById("adminScreen").classList.remove("show");
-  document.body.style.overflow="";
-  document.body.classList.add("manual-selection-active");
-  document.getElementById("manualSelectionBar").classList.add("show");
-  updateManualSelectionBar();
-  window.scrollTo({top:0,behavior:"auto"});
-}
-function validateEditAdvancePayment(){if(document.getElementById("editPayment").value!=="Advanced Received")return true;const t=editOrderItemsTotal(),p=Number(document.getElementById("editAdvancePercent").value),a=Number(document.getElementById("editAdvanceAmount").value);if(!t){alert("Add at least one item before entering advance payment.");return false}if(!Number.isFinite(p)||p<0||p>100||!Number.isFinite(a)||a<0||a>t+0.01){alert("Enter a valid advance percentage and amount. Advance cannot exceed the order total.");return false}return true}
+function addEditItemManually(){itemSelectionMode="edit";manualSelectionSavedCart=copyCart(cart);replaceCart({});manualItemSelectionActive=true;document.getElementById("editOrderModal").classList.remove("show");document.getElementById("adminScreen").classList.remove("show");document.body.style.overflow="";document.body.classList.add("manual-selection-active");document.getElementById("manualSelectionBar").classList.add("show");updateManualSelectionBar();window.scrollTo({top:0,behavior:"auto"})}
+function validateEditAdvancePayment(){if(document.getElementById("editPayment").value!=="Advanced Received")return true;const t=editOrderItemsTotal(),p=Number(document.getElementById("editAdvancePercent").value),a=Number(document.getElementById("editAdvanceAmount").value);if(!t){alert("Add at least one item before entering advance payment.");return false}if(!Number.isFinite(p)||p<0||p>100||!Number.isFinite(a)||a<0||a>t+0.01){alert("Enter a valid advance percentage and amount.");return false}if(Math.abs(t*p/100-a)>0.02){alert("Advance percentage and amount do not match.");return false}return true}
 function saveEditedOrder(){
-  if(!validateEditAdvancePayment()) return
-  const id=document.getElementById("editOrderId").value;
-  const original=adminOrders.find(x=>x.id===id);if(!original)return;
-  const valid=editOrderItemsDraft.filter(i=>String(i.design||"").trim()&&String(i.size||"").trim()&&Number(i.quantity)>0&&Number.isFinite(Number(i.price)));
-  if(!valid.length){alert("Add at least one valid item.");return}
-  const shipping=Number(document.getElementById("editShipping").value)||0;const discount=Number(document.getElementById("editDiscount").value)||0;
-  const subtotal=valid.reduce((a,i)=>a+Number(i.price)*Number(i.quantity),0);
-  const order={
-    ...original,
-    customerName:document.getElementById("editCustomerName").value.trim(),
-    phone:document.getElementById("editCustomerPhone").value.trim(),
-    address:document.getElementById("editCustomerAddress").value.trim(),
-    orderDate:document.getElementById("editOrderDate").value,
-    shipping,
-    status:document.getElementById("editStatus").value,
-    payment:document.getElementById("editPayment").value,
-    advancePercent:Number(document.getElementById("editAdvancePercent").value)||0,
-    advanceAmount:Number(document.getElementById("editAdvanceAmount").value)||0,
-    notes:document.getElementById("editNotes").value.trim(),
-    items:valid.map(i=>({...i,price:Number(i.price),quantity:Number(i.quantity),image:String(i.image||"")})),
-    subtotal,total:Math.max(0,subtotal+shipping-Number(document.getElementById("editDiscount").value)||0)
-  };
-  apiCall("updateOrder",{order:JSON.stringify(order)},result=>{
-    if(result){adminOrders=result.orders||adminOrders;hideEditOrder();refreshAdmin();selectedInvoiceOrderId=id;alert("Order updated successfully in Google Sheets.")}
-  });
+  if(!validateEditAdvancePayment())return;const id=document.getElementById("editOrderId").value,original=adminOrders.find(x=>x.id===id);if(!original)return;const valid=editOrderItemsDraft.filter(i=>String(i.design||"").trim()&&String(i.size||"").trim()&&Number(i.quantity)>0&&Number.isFinite(Number(i.price)));if(!valid.length){alert("Add at least one valid item.");return}
+  const shipping=Number(document.getElementById("editShipping").value)||0,discount=Number(document.getElementById("editDiscount").value)||0,subtotal=valid.reduce((a,i)=>a+Number(i.price)*Number(i.quantity),0),total=Math.max(0,subtotal+shipping-discount);
+  const order={...original,customerName:document.getElementById("editCustomerName").value.trim(),phone:document.getElementById("editCustomerPhone").value.trim(),address:document.getElementById("editCustomerAddress").value.trim(),orderDate:document.getElementById("editOrderDate").value,shipping,discount,status:document.getElementById("editStatus").value,payment:document.getElementById("editPayment").value,advancePercent:Number(document.getElementById("editAdvancePercent").value)||0,advanceAmount:Number(document.getElementById("editAdvanceAmount").value)||0,notes:document.getElementById("editNotes").value.trim(),items:valid.map(i=>({...i,price:Number(i.price),quantity:Number(i.quantity),image:String(i.image||"")})),subtotal,total};
+  apiCall("updateOrder",{order:JSON.stringify(order)},result=>{if(result){adminOrders=result.orders||adminOrders;hideEditOrder();refreshAdmin();selectedInvoiceOrderId=id;alert("Order updated successfully in Google Sheets.")}});
 }
 
 function copyCart(source){const copy={};Object.keys(source||{}).forEach(k=>{copy[k]=Number(source[k])||0});return copy}
@@ -4423,42 +4191,12 @@ function populateInvoiceSelect(){
   s.innerHTML='<option value="">Select an order to view invoice</option>'+list.map(o=>`<option value="${adminEsc(o.id)}" ${o.id===selectedInvoiceOrderId?"selected":""}>${adminEsc(o.orderNo)} — ${adminEsc(o.customerName||"Walk-in")} — ${adminMoney(o.total)}</option>`).join("");
 }
 function viewInvoice(id){selectedInvoiceOrderId=id;adminTab("invoice");populateInvoiceSelect();document.getElementById("invoiceOrderSelect").value=id;renderInvoice();renderInvoiceCards()}
-function renderInvoiceCards(){
-  const box=document.getElementById("invoiceCards"), pager=document.getElementById("invoicePagination");if(!box)return;
-  const month=document.getElementById("invoiceMonthFilter")?.value||"";
-  const list=filterByMonth(adminOrders,month).slice().sort((a,b)=>orderDateKey(b).localeCompare(orderDateKey(a)));
-  const pages=Math.max(1,Math.ceil(list.length/INVOICE_PAGE_SIZE));
-  if(invoicePage>pages)invoicePage=pages;
-  const start=(invoicePage-1)*INVOICE_PAGE_SIZE;
-  const pageItems=list.slice(start,start+INVOICE_PAGE_SIZE);
-  box.innerHTML=pageItems.length?pageItems.map(o=>{
-    const thumbs=(o.items||[]).slice(0,4).map(i=>i.image?`<img src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"").join("");
-    const more=(o.items||[]).length>4?`<span class="upcoming-more">+${o.items.length-4}</span>`:"";
-    return `<div class="invoice-card"><div class="invoice-card-head"><div><div class="invoice-card-no">${adminEsc(o.orderNo)}</div><div class="invoice-card-date">Order: ${prettyDate(orderDateKey(o))}</div></div><span class="status-pill status-${adminEsc(o.status)}">${adminEsc(o.status)}</span></div>
-      <div class="invoice-card-thumbs">${thumbs}${more}</div><div class="invoice-card-customer">${adminEsc(o.customerName||"Walk-in")}</div>
-      <div class="invoice-card-date">Dispatch: ${adminEsc(dispatchRange(orderDateKey(o)))}</div><div class="invoice-card-total">${adminMoney(o.total)}</div>
-      <div style="margin-top:8px"><button class="admin-btn primary" style="padding:6px 9px" onclick="viewInvoice('${adminEsc(o.id)}')">View Invoice</button></div></div>`;
-  }).join(""):"<div class='empty-admin' style='grid-column:1/-1'>No invoices found for this month.</div>";
-  pager.innerHTML=pages>1?`<button onclick="invoicePageChange(${invoicePage-1})" ${invoicePage<=1?"disabled":""}>←</button>${Array.from({length:pages},(_,i)=>`<button class="${i+1===invoicePage?"active":""}" onclick="invoicePageChange(${i+1})">${i+1}</button>`).join("")}<button onclick="invoicePageChange(${invoicePage+1})" ${invoicePage>=pages?"disabled":""}>→</button>`:"";
-}
+function renderInvoiceCards(overrideList){const box=document.getElementById("invoiceCards"),pager=document.getElementById("invoicePagination");if(!box)return;const month=document.getElementById("invoiceMonthFilter")?.value||"";const list=(overrideList||filterByMonth(adminOrders,month)).slice().sort((a,b)=>orderDateKey(b).localeCompare(orderDateKey(a)));const pages=Math.max(1,Math.ceil(list.length/INVOICE_PAGE_SIZE));if(invoicePage>pages)invoicePage=pages;const start=(invoicePage-1)*INVOICE_PAGE_SIZE,pageItems=list.slice(start,start+INVOICE_PAGE_SIZE);box.innerHTML=pageItems.length?pageItems.map(o=>`<div class="invoice-card" onclick="viewInvoice('${adminEsc(o.id)}')"><div class="invoice-card-head"><div><div class="invoice-card-no">${adminEsc(o.orderNo)}</div><div class="invoice-card-date">${prettyDate(orderDateKey(o))}</div></div><span class="status-pill status-${adminEsc(o.status)}">${adminEsc(o.status)}</span></div><div class="invoice-card-customer">${adminEsc(o.customerName||"Walk-in")}</div><div class="invoice-card-thumbs">${(o.items||[]).slice(0,4).map(i=>i.image?`<img src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"").join("")}</div><div class="invoice-card-total">${adminMoney(o.total)}</div></div>`).join(""):"<div class='empty-admin' style='grid-column:1/-1'>No invoices found.</div>";pager.innerHTML=pages>1?`<button onclick="invoicePageChange(${invoicePage-1})" ${invoicePage<=1?"disabled":""}>←</button>${Array.from({length:pages},(_,i)=>`<button class="${i+1===invoicePage?"active":""}" onclick="invoicePageChange(${i+1})">${i+1}</button>`).join("")}<button onclick="invoicePageChange(${invoicePage+1})" ${invoicePage>=pages?"disabled":""}>→</button>`:""}
 function invoicePageChange(page){invoicePage=Math.max(1,page);renderInvoiceCards()}
 function renderInvoice(){
-  const id=document.getElementById("invoiceOrderSelect").value;selectedInvoiceOrderId=id;
-  const o=adminOrders.find(x=>x.id===id),box=document.getElementById("invoicePreview");
-  if(!o){box.innerHTML="<div class='empty-admin'>Select an order above or click View Invoice on a card.</div>";return}
-  const set=adminSettings||{},dk=orderDateKey(o);
-  box.innerHTML=`<div class="invoice-box" id="printInvoiceArea">
-    <div class="invoice-head"><div><div class="invoice-brand">${adminEsc(set.businessName||"Swapnali's Rangoli")}</div><div class="admin-mini">Order Invoice</div></div>
-    <div class="invoice-meta"><strong>${adminEsc(o.orderNo)}</strong><br>Order Date: ${adminEsc(prettyDate(dk))}<br>Dispatch: ${adminEsc(dispatchRange(dk))}<br>Status: ${adminEsc(o.status)}</div></div>
-    <div class="invoice-customer"><strong>Customer</strong><br>${adminEsc(o.customerName||"—")}<br>${adminEsc(o.phone||"")}<br>${adminEsc(o.address||"")}<br><br><strong>Payment:</strong> ${adminEsc(o.payment||"Pending")}${o.payment==="Advanced Received"?`<br><strong>Advance:</strong> ${Number(o.advancePercent||0).toFixed(2)}% (${adminMoney(o.advanceAmount||0)})<br><strong>Remaining:</strong> ${adminMoney(Number(o.total||0)-Number(o.advanceAmount||0))}`:""}</div>
-    <table class="invoice-lines"><thead><tr><th>Image</th><th>Design</th><th>Size</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead><tbody>
-    ${(o.items||[]).map(i=>`<tr><td>${i.image?`<img class="invoice-item-image" src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"—"}</td><td>${adminEsc(i.design)}</td><td>${adminEsc(i.size)}</td><td>${Number(i.quantity)||0}</td><td>${adminMoney(i.price)}</td><td>${adminMoney(Number(i.price)*Number(i.quantity))}</td></tr>`).join("")}</tbody></table>
-    <div style="text-align:right;margin-top:8px;font-size:12px">Items Total: <strong>${adminMoney(o.subtotal)}</strong><br>Shipping: <strong>${adminMoney(o.shipping)}</strong></div>
-    <div class="invoice-total">Grand Total: ${adminMoney(o.total)}</div>
-    <div style="margin-top:10px;padding:8px;background:#f8edf2;border:1px solid #ead5df;border-radius:8px;text-align:center;font-size:11px;font-weight:700;color:#5b1738">Order Date: ${adminEsc(prettyDate(dk))} · Dispatch Window: ${adminEsc(dispatchRange(dk))}</div>
-    ${o.notes?`<div style="margin-top:12px;font-size:11px"><strong>Notes:</strong> ${adminEsc(o.notes)}</div>`:""}
-    <div style="margin-top:18px;border-top:1px solid #ead8e0;padding-top:10px;text-align:center;font-size:10px;color:#806b74">${adminEsc(set.footer||"Thank you for your order! 🌸")}</div>
-  </div>`;
+  const id=document.getElementById("invoiceOrderSelect").value;selectedInvoiceOrderId=id;const o=adminOrders.find(x=>x.id===id),box=document.getElementById("invoicePreview");if(!o){box.innerHTML="<div class='empty-admin'>Select an order above or click an invoice card.</div>";return}
+  const set=adminSettings||{},dk=orderDateKey(o),itemsTotal=Number(o.subtotal||0),shipping=Number(o.shipping||0),discount=Number(o.discount||0),grand=Math.max(0,itemsTotal+shipping-discount),deliveredDate=o.status==="Delivered"&&o.updatedAt?prettyDate(dateInputValue(o.updatedAt)):"";
+  box.innerHTML=`<div class="invoice-box" id="printInvoiceArea"><div class="invoice-head"><div class="invoice-head-col"><div class="invoice-customer-name">${adminEsc(o.customerName||"Walk-in")}</div><div class="invoice-meta">Payment: <strong>${adminEsc(o.payment||"Pending")}</strong>${o.payment==="Advanced Received"?`<br>Advance: ${Number(o.advancePercent||0).toFixed(2)}% (${adminMoney(o.advanceAmount||0)})`:""}</div></div><div class="invoice-head-col"><div class="invoice-brand">${adminEsc(set.businessName||"Swapnali's Rangoli")}</div><div class="invoice-meta">Order Invoice</div></div><div class="invoice-head-col"><div class="invoice-meta"><strong>${adminEsc(o.orderNo)}</strong><br>Order Date: ${adminEsc(prettyDate(dk))}<br>Status: <strong>${adminEsc(o.status)}</strong>${deliveredDate?`<br>Delivered Date: ${adminEsc(deliveredDate)}`:""}</div></div></div><div class="invoice-address">${adminEsc(o.address||"Address not provided")}</div><table class="invoice-lines"><thead><tr><th>Image</th><th>Design</th><th>Size</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead><tbody>${(o.items||[]).map(i=>`<tr><td>${i.image?`<img class="invoice-item-image" src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"—"}</td><td>${adminEsc(i.design)}</td><td>${adminEsc(i.size)}</td><td>${Number(i.quantity)||0}</td><td>${adminMoney(i.price)}</td><td>${adminMoney(Number(i.price)*Number(i.quantity))}</td></tr>`).join("")}</tbody></table><div class="invoice-total"><div>Total: ${adminMoney(itemsTotal)}</div><div>Shipping: ${adminMoney(shipping)}</div><div>Discount: −${adminMoney(discount)}</div><div class="grand">Grand Total: ${adminMoney(grand)}</div></div>${Number(o.advanceAmount||0)>0?`<div style="text-align:right;margin-top:5px;font-size:11px;color:#6f1d45">Advance Received: ${adminMoney(o.advanceAmount)} · Balance Due: ${adminMoney(Math.max(0,grand-Number(o.advanceAmount||0)))}</div>`:""}<div style="margin-top:10px;padding:7px;background:#f8edf2;border:1px solid #ead5df;border-radius:8px;text-align:center;font-size:9px;font-weight:700;color:#5b1738">Order Date: ${adminEsc(prettyDate(dk))} · Dispatch Window: ${adminEsc(dispatchRange(dk))}</div>${o.notes?`<div style="margin-top:10px;font-size:10px"><strong>Notes:</strong> ${adminEsc(o.notes)}</div>`:""}<div style="margin-top:14px;border-top:1px solid #ead8e0;padding-top:8px;text-align:center;font-size:9px;color:#806b74">${adminEsc(set.footer||"Thank you for your order! 🌸")}</div></div>`;
 }
 function printInvoice(){
   if(!selectedInvoiceOrderId){alert("Select an order first.");return}
