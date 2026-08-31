@@ -2464,8 +2464,10 @@ body.manual-selection-active .bottom-cart{display:none}
           <div class="admin-field"><label>Phone Number</label><input id="newCustomerPhone" placeholder="WhatsApp / phone number"></div>
           <div class="admin-field admin-full"><label>Address</label><input id="newCustomerAddress" placeholder="Delivery address"></div>
           <div class="admin-field"><label>Actual Order Date</label><input id="newOrderDate" type="date"></div>
-          <div class="admin-field"><label>Shipping Charges</label><input id="newShipping" type="number" min="0" value="0"></div>
-          <div class="admin-field"><label>Payment Status</label><select id="newPayment"><option>Pending</option><option>Paid</option><option>Partially Paid</option><option>COD</option></select></div>
+          <div class="admin-field"><label>Shipping Charges</label><input id="newShipping" type="number" min="0" value="0" oninput="syncNewAdvanceFromPercent()"></div>
+          <div class="admin-field"><label>Discount Amount</label><input id="newDiscount" type="number" min="0" step="0.01" value="0" oninput="syncNewAdvanceFromPercent()"></div>
+          <div class="admin-field"><label>Payment Status</label><select id="newPayment" onchange="handleNewPaymentChange()"><option>Pending</option><option>Advanced Received</option><option>Paid</option><option>Partially Paid</option><option>COD</option></select></div>
+          <div class="admin-field" id="newAdvancePaymentFields" style="display:none"><label>Advance Payment</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><input id="newAdvancePercent" type="number" min="0" max="100" step="0.01" placeholder="Advance %" oninput="syncNewAdvanceFromPercent()"><div class="admin-mini">Advance %</div></div><div><input id="newAdvanceAmount" type="number" min="0" step="0.01" placeholder="Amount received" oninput="syncNewAdvanceFromAmount()"><div class="admin-mini">Amount received</div></div></div><div id="newAdvanceSummary" class="admin-mini" style="margin-top:6px"></div></div>
           <div class="admin-field"><label>Order Status</label><select id="newStatus"><option>New</option><option>Confirmed</option><option>Packed</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select></div>
           <div class="admin-field admin-full"><label>Notes</label><textarea id="newNotes" placeholder="Shipping details, customer requests, payment notes..." style="min-height:70px"></textarea></div>
         </div>
@@ -2517,9 +2519,11 @@ body.manual-selection-active .bottom-cart{display:none}
       <div class="admin-field"><label>Phone Number</label><input id="editCustomerPhone" placeholder="WhatsApp / phone number"></div>
       <div class="admin-field admin-full"><label>Address</label><textarea id="editCustomerAddress" placeholder="Delivery address" style="min-height:65px"></textarea></div>
       <div class="admin-field"><label>Actual Order Date</label><input id="editOrderDate" type="date"></div>
-      <div class="admin-field"><label>Shipping Charges</label><input id="editShipping" type="number" min="0" value="0"></div>
+      <div class="admin-field"><label>Shipping Charges</label><input id="editShipping" type="number" min="0" value="0" oninput="syncEditAdvanceFromPercent()"></div>
+          <div class="admin-field"><label>Discount Amount</label><input id="editDiscount" type="number" min="0" step="0.01" value="0" oninput="syncEditAdvanceFromPercent()"></div>
       <div class="admin-field"><label>Order Status</label><select id="editStatus"><option>New</option><option>Confirmed</option><option>Packed</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select></div>
-      <div class="admin-field"><label>Payment Status</label><select id="editPayment"><option>Pending</option><option>Paid</option><option>Partially Paid</option><option>COD</option></select></div>
+      <div class="admin-field"><label>Payment Status</label><select id="editPayment" onchange="handleEditPaymentChange()"><option>Pending</option><option>Advanced Received</option><option>Paid</option><option>Partially Paid</option><option>COD</option></select></div>
+      <div class="admin-field" id="editAdvancePaymentFields" style="display:none"><label>Advance Payment</label><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><input id="editAdvancePercent" type="number" min="0" max="100" step="0.01" placeholder="Advance %" oninput="syncEditAdvanceFromPercent()"><div class="admin-mini">Advance %</div></div><div><input id="editAdvanceAmount" type="number" min="0" step="0.01" placeholder="Amount received" oninput="syncEditAdvanceFromAmount()"><div class="admin-mini">Amount received</div></div></div><div id="editAdvanceSummary" class="admin-mini" style="margin-top:6px"></div></div>
       <div class="admin-field admin-full"><label>Notes</label><textarea id="editNotes" placeholder="Notes" style="min-height:65px"></textarea></div>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px">
@@ -4098,6 +4102,9 @@ function editOrder(id){
   document.getElementById("editShipping").value=Number(o.shipping||0);
   document.getElementById("editStatus").value=o.status||"New";
   document.getElementById("editPayment").value=o.payment||"Pending";
+  document.getElementById("editAdvancePercent").value=Number(o.advancePercent||0)||"";
+  document.getElementById("editAdvanceAmount").value=Number(o.advanceAmount||0)||"";
+  handleEditPaymentChange();
   document.getElementById("editNotes").value=o.notes||"";
   editOrderItemsDraft=(o.items||[]).map(i=>({...i}));
   renderEditOrderItems();
@@ -4143,12 +4150,14 @@ function addEditItemManually(){
   updateManualSelectionBar();
   window.scrollTo({top:0,behavior:"auto"});
 }
+function validateEditAdvancePayment(){if(document.getElementById("editPayment").value!=="Advanced Received")return true;const t=editOrderItemsTotal(),p=Number(document.getElementById("editAdvancePercent").value),a=Number(document.getElementById("editAdvanceAmount").value);if(!t){alert("Add at least one item before entering advance payment.");return false}if(!Number.isFinite(p)||p<0||p>100||!Number.isFinite(a)||a<0||a>t+0.01){alert("Enter a valid advance percentage and amount. Advance cannot exceed the order total.");return false}return true}
 function saveEditedOrder(){
+  if(!validateEditAdvancePayment()) return
   const id=document.getElementById("editOrderId").value;
   const original=adminOrders.find(x=>x.id===id);if(!original)return;
   const valid=editOrderItemsDraft.filter(i=>String(i.design||"").trim()&&String(i.size||"").trim()&&Number(i.quantity)>0&&Number.isFinite(Number(i.price)));
   if(!valid.length){alert("Add at least one valid item.");return}
-  const shipping=Number(document.getElementById("editShipping").value)||0;
+  const shipping=Number(document.getElementById("editShipping").value)||0;const discount=Number(document.getElementById("editDiscount").value)||0;
   const subtotal=valid.reduce((a,i)=>a+Number(i.price)*Number(i.quantity),0);
   const order={
     ...original,
@@ -4159,9 +4168,11 @@ function saveEditedOrder(){
     shipping,
     status:document.getElementById("editStatus").value,
     payment:document.getElementById("editPayment").value,
+    advancePercent:Number(document.getElementById("editAdvancePercent").value)||0,
+    advanceAmount:Number(document.getElementById("editAdvanceAmount").value)||0,
     notes:document.getElementById("editNotes").value.trim(),
     items:valid.map(i=>({...i,price:Number(i.price),quantity:Number(i.quantity),image:String(i.image||"")})),
-    subtotal,total:subtotal+shipping
+    subtotal,total:Math.max(0,subtotal+shipping-Number(document.getElementById("editDiscount").value)||0)
   };
   apiCall("updateOrder",{order:JSON.stringify(order)},result=>{
     if(result){adminOrders=result.orders||adminOrders;hideEditOrder();refreshAdmin();selectedInvoiceOrderId=id;alert("Order updated successfully in Google Sheets.")}
@@ -4256,6 +4267,7 @@ function changeManualItemQuantity(i,amount,event){
   renderNewOrderItems();
 }
 function renderNewOrderItems(){
+  if(document.getElementById("newPayment")?.value==="Advanced Received") syncNewAdvanceFromPercent();
   const box=document.getElementById("newOrderItems");
   if(!newOrderItems.length){box.innerHTML="<div class='empty-admin'>No items yet. Click Add Item to choose designs from the shopping page.</div>";return}
   box.innerHTML=`<div class="order-items"><div class="order-items-header"><div class="header-image">Image</div><div class="header-details">Design Number</div><div class="header-quantity">Quantity</div><div class="header-subtotal">Subtotal</div></div>
@@ -4265,14 +4277,24 @@ function renderNewOrderItems(){
     <div class="order-price">${adminMoney((Number(x.price)||0)*(Number(x.quantity)||1))}</div></div>`).join("")}</div>`;
   box.querySelectorAll(".manual-order-thumb").forEach(img=>{const item=newOrderItems[Number(img.dataset.manualIndex)];if(item){img.src=resolveImageUrl(item.image||"");img.onerror=()=>{img.onerror=null;setupImageFallback(img,item.image||"")}}});
 }
+function manualOrderItemsTotal(){const s=Number(document.getElementById("newShipping")?.value)||0;const d=Number(document.getElementById("newDiscount")?.value)||0;return Math.max(0,newOrderItems.reduce((a,i)=>a+Number(i.price||0)*Number(i.quantity||0),0)+s-d)}
+function handleNewPaymentChange(){const v=document.getElementById("newPayment")?.value,b=document.getElementById("newAdvancePaymentFields");if(!b)return;b.style.display=v==="Advanced Received"?"":"none";if(v==="Advanced Received")syncNewAdvanceFromPercent();else{document.getElementById("newAdvancePercent").value="";document.getElementById("newAdvanceAmount").value="";document.getElementById("newAdvanceSummary").textContent=""}}
+function syncNewAdvanceFromPercent(){const t=manualOrderItemsTotal(),p=Math.min(100,Math.max(0,Number(document.getElementById("newAdvancePercent").value)||0)),a=t*p/100;document.getElementById("newAdvanceAmount").value=t?a.toFixed(2):"";document.getElementById("newAdvanceSummary").textContent=t?`Order total: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance."}
+function syncNewAdvanceFromAmount(){const t=manualOrderItemsTotal(),a=Math.min(t,Math.max(0,Number(document.getElementById("newAdvanceAmount").value)||0));document.getElementById("newAdvanceAmount").value=a?a.toFixed(2):"";document.getElementById("newAdvancePercent").value=t?((a/t)*100).toFixed(2):"";document.getElementById("newAdvanceSummary").textContent=t?`Order total: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance."}
+function validateNewAdvancePayment(){if(document.getElementById("newPayment").value!=="Advanced Received")return true;const t=manualOrderItemsTotal(),p=Number(document.getElementById("newAdvancePercent").value),a=Number(document.getElementById("newAdvanceAmount").value);if(!t){alert("Add at least one item before entering advance payment.");return false}if(!Number.isFinite(p)||p<0||p>100||!Number.isFinite(a)||a<0||a>t+0.01){alert("Enter a valid advance percentage and amount. Advance cannot exceed the order total.");return false}return true}
+function editOrderItemsTotal(){const s=Number(document.getElementById("editShipping")?.value)||0;const d=Number(document.getElementById("editDiscount")?.value)||0;return Math.max(0,editOrderItemsDraft.reduce((a,i)=>a+Number(i.price||0)*Number(i.quantity||0),0)+s-d)}
+function handleEditPaymentChange(){const v=document.getElementById("editPayment")?.value,b=document.getElementById("editAdvancePaymentFields");if(!b)return;b.style.display=v==="Advanced Received"?"":"none";if(v==="Advanced Received")syncEditAdvanceFromPercent()}
+function syncEditAdvanceFromPercent(){const t=editOrderItemsTotal(),p=Math.min(100,Math.max(0,Number(document.getElementById("editAdvancePercent").value)||0)),a=t*p/100;document.getElementById("editAdvanceAmount").value=t?a.toFixed(2):"";document.getElementById("editAdvanceSummary").textContent=t?`Order total before shipping: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance."}
+function syncEditAdvanceFromAmount(){const t=editOrderItemsTotal(),a=Math.min(t,Math.max(0,Number(document.getElementById("editAdvanceAmount").value)||0));document.getElementById("editAdvanceAmount").value=a?a.toFixed(2):"";document.getElementById("editAdvancePercent").value=t?((a/t)*100).toFixed(2):"";document.getElementById("editAdvanceSummary").textContent=t?`Order total before shipping: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance."}
 function saveNewOrder(){
+  if(!validateNewAdvancePayment()) return
   if(!newOrderItems.length){alert("Add at least one item.");return}
   const valid=newOrderItems.filter(i=>i.design&&i.size&&Number(i.quantity)>0&&Number.isFinite(Number(i.price)));
   if(!valid.length){alert("Please enter valid order items.");return}
   const orderDate=document.getElementById("newOrderDate").value||localDateKey(new Date());
   const shipping=Number(document.getElementById("newShipping").value)||0;
   const subtotal=valid.reduce((a,i)=>a+Number(i.price)*Number(i.quantity),0);
-  const order={id:"o_"+Date.now()+Math.random().toString(36).slice(2,7),orderNo:"",orderDate,createdAt:new Date().toISOString(),customerName:document.getElementById("newCustomerName").value.trim(),phone:document.getElementById("newCustomerPhone").value.trim(),address:document.getElementById("newCustomerAddress").value.trim(),shipping,status:document.getElementById("newStatus").value,payment:document.getElementById("newPayment").value,notes:document.getElementById("newNotes").value.trim(),items:valid.map(i=>({...i,price:Number(i.price),quantity:Number(i.quantity)})),subtotal,total:subtotal+shipping};
+  const order={id:"o_"+Date.now()+Math.random().toString(36).slice(2,7),orderNo:"",orderDate,createdAt:new Date().toISOString(),customerName:document.getElementById("newCustomerName").value.trim(),phone:document.getElementById("newCustomerPhone").value.trim(),address:document.getElementById("newCustomerAddress").value.trim(),shipping,status:document.getElementById("newStatus").value,payment:document.getElementById("newPayment").value,advancePercent:Number(document.getElementById("newAdvancePercent").value)||0,advanceAmount:Number(document.getElementById("newAdvanceAmount").value)||0,discount,notes:document.getElementById("newNotes").value.trim(),items:valid.map(i=>({...i,price:Number(i.price),quantity:Number(i.quantity)})),subtotal,total:Math.max(0,subtotal+shipping-discount)};
   apiCall("saveOrder",{order:JSON.stringify(order)},result=>{
     if(result){
       adminOrders=result.orders||adminOrders;
@@ -4287,8 +4309,8 @@ function clearNewOrder(){
   newOrderItems=[];
   ["newCustomerName","newCustomerPhone","newCustomerAddress","newNotes"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("newOrderDate").value=localDateKey(new Date());
-  document.getElementById("newShipping").value=0;
-  document.getElementById("newPayment").value="Pending";
+  document.getElementById("newShipping").value=0;document.getElementById("newDiscount").value=0;
+  document.getElementById("newPayment").value="Pending";document.getElementById("newAdvancePercent").value="";document.getElementById("newAdvanceAmount").value="";document.getElementById("newAdvanceSummary").textContent="";handleNewPaymentChange();
   document.getElementById("newStatus").value="New";
   renderNewOrderItems();
 }
@@ -4326,7 +4348,7 @@ function renderInvoice(){
   box.innerHTML=`<div class="invoice-box" id="printInvoiceArea">
     <div class="invoice-head"><div><div class="invoice-brand">${adminEsc(set.businessName||"Swapnali's Rangoli")}</div><div class="admin-mini">Order Invoice</div></div>
     <div class="invoice-meta"><strong>${adminEsc(o.orderNo)}</strong><br>Order Date: ${adminEsc(prettyDate(dk))}<br>Dispatch: ${adminEsc(dispatchRange(dk))}<br>Status: ${adminEsc(o.status)}</div></div>
-    <div class="invoice-customer"><strong>Customer</strong><br>${adminEsc(o.customerName||"—")}<br>${adminEsc(o.phone||"")}<br>${adminEsc(o.address||"")}<br><br><strong>Payment:</strong> ${adminEsc(o.payment||"Pending")}</div>
+    <div class="invoice-customer"><strong>Customer</strong><br>${adminEsc(o.customerName||"—")}<br>${adminEsc(o.phone||"")}<br>${adminEsc(o.address||"")}<br><br><strong>Payment:</strong> ${adminEsc(o.payment||"Pending")}${o.payment==="Advanced Received"?`<br><strong>Advance:</strong> ${Number(o.advancePercent||0).toFixed(2)}% (${adminMoney(o.advanceAmount||0)})<br><strong>Remaining:</strong> ${adminMoney(Number(o.total||0)-Number(o.advanceAmount||0))}`:""}</div>
     <table class="invoice-lines"><thead><tr><th>Image</th><th>Design</th><th>Size</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead><tbody>
     ${(o.items||[]).map(i=>`<tr><td>${i.image?`<img class="invoice-item-image" src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"—"}</td><td>${adminEsc(i.design)}</td><td>${adminEsc(i.size)}</td><td>${Number(i.quantity)||0}</td><td>${adminMoney(i.price)}</td><td>${adminMoney(Number(i.price)*Number(i.quantity))}</td></tr>`).join("")}</tbody></table>
     <div style="text-align:right;margin-top:8px;font-size:12px">Items Total: <strong>${adminMoney(o.subtotal)}</strong><br>Shipping: <strong>${adminMoney(o.shipping)}</strong></div>
