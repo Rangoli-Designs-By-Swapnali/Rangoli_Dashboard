@@ -809,7 +809,7 @@ function listOrders_() {
           Number(row[7] || 0),
 
         status:
-          String(row[8] || 'New'),
+          (String(row[8] || 'New') === 'Packed' ? 'Confirmed' : String(row[8] || 'New')),
 
         payment:
           String(row[9] || 'Pending'),
@@ -1233,7 +1233,7 @@ function updateOrder_(raw) {
 
         Number(order.shipping || 0),
 
-        String(order.status || 'New'),
+        (String(order.status || 'New') === 'Packed' ? 'Confirmed' : String(order.status || 'New')),
 
         String(order.payment || 'Pending'),
 
@@ -1366,7 +1366,6 @@ function validateOrder_(order) {
   const allowedStatuses = [
     'New',
     'Confirmed',
-    'Packed',
     'Dispatched',
     'Delivered',
     'Cancelled'
@@ -1573,6 +1572,8 @@ function validateOrder_(order) {
 
 function updateStatus_(id, status) {
 
+  if (status === 'Packed') status = 'Confirmed';
+
   if (!id) {
     throw new Error(
       'Order ID is missing.'
@@ -1582,7 +1583,6 @@ function updateStatus_(id, status) {
   const allowed = [
     'New',
     'Confirmed',
-    'Packed',
     'Dispatched',
     'Delivered',
     'Cancelled'
@@ -1622,6 +1622,7 @@ function updateStatus_(id, status) {
     if (String(ids[i][0]) === id) {
 
       const rowNumber = i + 2;
+
 
       /*
        * UpdatedAt = column 4.
