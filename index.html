@@ -2051,6 +2051,33 @@ body.manual-selection-active .bottom-cart{display:none}
   .edit-order-box{padding:14px !important}
 }
 
+
+/* =========================================================
+   ORDER / ADMIN RESPONSIVE VISIBILITY
+========================================================= */
+.manual-order-action-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.new-order-save-btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:155px}
+.new-order-total{font-weight:800;white-space:nowrap}
+.pin-box{max-height:calc(100vh - 30px);overflow:auto}
+.admin-card{overflow:visible}
+@media(max-width:600px){
+  .page{padding-left:8px;padding-right:8px;padding-bottom:120px}
+  .card{padding:18px 12px}
+  .brand-name{font-size:26px}
+  .tagline{font-size:13px;white-space:normal}
+  .admin-wrap{padding:8px}
+  .admin-card{padding:12px}
+  .admin-top{padding:12px;position:relative}
+  .admin-actions{width:100%;justify-content:flex-start}
+  .admin-btn{padding:8px 10px;font-size:12px}
+  .admin-form-grid{grid-template-columns:1fr}
+  .admin-full{grid-column:1}
+  .manual-order-action-row{position:sticky;bottom:0;z-index:25;background:#fff;padding:8px 0;border-top:1px solid #ead8e0}
+  .manual-order-action-row .admin-btn{flex:1;min-width:0}
+  .new-order-save-btn{min-width:0}
+  .manual-order-preview{overflow-x:auto}
+  .manual-order-preview .order-items{min-width:520px}
+}
 </style>
 
 
@@ -2471,10 +2498,10 @@ body.manual-selection-active .bottom-cart{display:none}
           <div class="admin-field"><label>Order Status</label><select id="newStatus"><option>New</option><option>Confirmed</option><option>Packed</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select></div>
           <div class="admin-field admin-full"><label>Notes</label><textarea id="newNotes" placeholder="Shipping details, customer requests, payment notes..." style="min-height:70px"></textarea></div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-          <button class="admin-btn" onclick="addManualItem()">+ Add Item</button>
-          <button class="admin-btn primary" onclick="saveNewOrder()">💾 Save Order</button>
-          <button class="admin-btn" onclick="clearNewOrder()">Clear</button>
+        <div class="manual-order-action-row">
+          <button type="button" class="admin-btn" onclick="addManualItem()">+ Add Item</button>
+          <button type="button" class="admin-btn primary new-order-save-btn" id="newOrderSaveButton" onclick="saveNewOrder()">💾 Save Order <span class="new-order-total" id="newOrderTotalButton">₹0</span></button>
+          <button type="button" class="admin-btn" onclick="clearNewOrder()">Clear</button>
         </div>
         <div class="manual-order-preview" id="newOrderItems"><div class="empty-admin">No items yet. Click Add Item to choose designs from the shopping page.</div></div>
       </div>
@@ -3189,6 +3216,7 @@ function toggleVariant(
 
 
   updateCart();
+  if (manualItemSelectionActive) updateManualSelectionBar();
 
 }
 
@@ -3243,6 +3271,7 @@ function changeQuantity(
 
 
   updateCart();
+  if (manualItemSelectionActive) updateManualSelectionBar();
 
 }
 
@@ -4100,6 +4129,7 @@ function editOrder(id){
   document.getElementById("editCustomerAddress").value=o.address||"";
   document.getElementById("editOrderDate").value=dateInputValue(orderDateKey(o));
   document.getElementById("editShipping").value=Number(o.shipping||0);
+  document.getElementById("editDiscount").value=Number(o.discount||0);
   document.getElementById("editStatus").value=o.status||"New";
   document.getElementById("editPayment").value=o.payment||"Pending";
   document.getElementById("editAdvancePercent").value=Number(o.advancePercent||0)||"";
@@ -4267,34 +4297,45 @@ function changeManualItemQuantity(i,amount,event){
   renderNewOrderItems();
 }
 function renderNewOrderItems(){
-  if(document.getElementById("newPayment")?.value==="Advanced Received") syncNewAdvanceFromPercent();
   const box=document.getElementById("newOrderItems");
-  if(!newOrderItems.length){box.innerHTML="<div class='empty-admin'>No items yet. Click Add Item to choose designs from the shopping page.</div>";return}
+  if(!newOrderItems.length){
+    box.innerHTML="<div class='empty-admin'>No items yet. Click Add Item to choose designs from the shopping page.</div>";
+    updateNewOrderTotalButton();
+    if(document.getElementById("newPayment")?.value==="Advanced Received") syncNewAdvanceFromPercent();
+    return;
+  }
   box.innerHTML=`<div class="order-items"><div class="order-items-header"><div class="header-image">Image</div><div class="header-details">Design Number</div><div class="header-quantity">Quantity</div><div class="header-subtotal">Subtotal</div></div>
     ${newOrderItems.map((x,i)=>`<div class="order-item"><div class="order-thumb-wrapper"><img class="order-thumb manual-order-thumb" data-manual-index="${i}" alt="${adminEsc(x.design)}"></div>
     <div class="order-details"><p class="order-design">${adminEsc(x.design)}</p><span class="order-size">Size: ${adminEsc(x.size)}</span><span class="order-price-each">Price each: ${adminMoney(x.price)}</span></div>
     <div class="order-quantity"><div class="preview-quantity-control"><button type="button" class="quantity-btn" onclick="changeManualItemQuantity(${i},-1,event)">−</button><span class="quantity-value">${Number(x.quantity)||1}</span><button type="button" class="quantity-btn" onclick="changeManualItemQuantity(${i},1,event)">+</button></div></div>
     <div class="order-price">${adminMoney((Number(x.price)||0)*(Number(x.quantity)||1))}</div></div>`).join("")}</div>`;
   box.querySelectorAll(".manual-order-thumb").forEach(img=>{const item=newOrderItems[Number(img.dataset.manualIndex)];if(item){img.src=resolveImageUrl(item.image||"");img.onerror=()=>{img.onerror=null;setupImageFallback(img,item.image||"")}}});
+  updateNewOrderTotalButton();
+  if(document.getElementById("newPayment")?.value==="Advanced Received") syncNewAdvanceFromPercent();
 }
-function manualOrderItemsTotal(){const s=Number(document.getElementById("newShipping")?.value)||0;const d=Number(document.getElementById("newDiscount")?.value)||0;return Math.max(0,newOrderItems.reduce((a,i)=>a+Number(i.price||0)*Number(i.quantity||0),0)+s-d)}
+function manualOrderItemsSubtotal(){return newOrderItems.reduce((a,i)=>a+Number(i.price||0)*Number(i.quantity||0),0)}
+function manualOrderItemsTotal(){const s=Number(document.getElementById("newShipping")?.value)||0;const d=Number(document.getElementById("newDiscount")?.value)||0;return Math.max(0,manualOrderItemsSubtotal()+s-d)}
+function manualOrderDisplayTotal(){const d=Number(document.getElementById("newDiscount")?.value)||0;return Math.max(0,manualOrderItemsSubtotal()-d)}
+function updateNewOrderTotalButton(){const el=document.getElementById("newOrderTotalButton");if(el)el.textContent=adminMoney(manualOrderDisplayTotal())}
 function handleNewPaymentChange(){const v=document.getElementById("newPayment")?.value,b=document.getElementById("newAdvancePaymentFields");if(!b)return;b.style.display=v==="Advanced Received"?"":"none";if(v==="Advanced Received")syncNewAdvanceFromPercent();else{document.getElementById("newAdvancePercent").value="";document.getElementById("newAdvanceAmount").value="";document.getElementById("newAdvanceSummary").textContent=""}}
-function syncNewAdvanceFromPercent(){const t=manualOrderItemsTotal(),p=Math.min(100,Math.max(0,Number(document.getElementById("newAdvancePercent").value)||0)),a=t*p/100;document.getElementById("newAdvanceAmount").value=t?a.toFixed(2):"";document.getElementById("newAdvanceSummary").textContent=t?`Order total: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance."}
-function syncNewAdvanceFromAmount(){const t=manualOrderItemsTotal(),a=Math.min(t,Math.max(0,Number(document.getElementById("newAdvanceAmount").value)||0));document.getElementById("newAdvanceAmount").value=a?a.toFixed(2):"";document.getElementById("newAdvancePercent").value=t?((a/t)*100).toFixed(2):"";document.getElementById("newAdvanceSummary").textContent=t?`Order total: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance."}
+function syncNewAdvanceFromPercent(){updateNewOrderTotalButton();const t=manualOrderItemsTotal(),p=Math.min(100,Math.max(0,Number(document.getElementById("newAdvancePercent").value)||0)),a=t*p/100;document.getElementById("newAdvanceAmount").value=t?a.toFixed(2):"";document.getElementById("newAdvanceSummary").textContent=t?`Order total: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance."}
+function syncNewAdvanceFromAmount(){updateNewOrderTotalButton();const t=manualOrderItemsTotal(),a=Math.min(t,Math.max(0,Number(document.getElementById("newAdvanceAmount").value)||0));document.getElementById("newAdvanceAmount").value=a?a.toFixed(2):"";document.getElementById("newAdvancePercent").value=t?((a/t)*100).toFixed(2):"";document.getElementById("newAdvanceSummary").textContent=t?`Order total: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance."}
 function validateNewAdvancePayment(){if(document.getElementById("newPayment").value!=="Advanced Received")return true;const t=manualOrderItemsTotal(),p=Number(document.getElementById("newAdvancePercent").value),a=Number(document.getElementById("newAdvanceAmount").value);if(!t){alert("Add at least one item before entering advance payment.");return false}if(!Number.isFinite(p)||p<0||p>100||!Number.isFinite(a)||a<0||a>t+0.01){alert("Enter a valid advance percentage and amount. Advance cannot exceed the order total.");return false}return true}
 function editOrderItemsTotal(){const s=Number(document.getElementById("editShipping")?.value)||0;const d=Number(document.getElementById("editDiscount")?.value)||0;return Math.max(0,editOrderItemsDraft.reduce((a,i)=>a+Number(i.price||0)*Number(i.quantity||0),0)+s-d)}
 function handleEditPaymentChange(){const v=document.getElementById("editPayment")?.value,b=document.getElementById("editAdvancePaymentFields");if(!b)return;b.style.display=v==="Advanced Received"?"":"none";if(v==="Advanced Received")syncEditAdvanceFromPercent()}
 function syncEditAdvanceFromPercent(){const t=editOrderItemsTotal(),p=Math.min(100,Math.max(0,Number(document.getElementById("editAdvancePercent").value)||0)),a=t*p/100;document.getElementById("editAdvanceAmount").value=t?a.toFixed(2):"";document.getElementById("editAdvanceSummary").textContent=t?`Order total before shipping: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance."}
 function syncEditAdvanceFromAmount(){const t=editOrderItemsTotal(),a=Math.min(t,Math.max(0,Number(document.getElementById("editAdvanceAmount").value)||0));document.getElementById("editAdvanceAmount").value=a?a.toFixed(2):"";document.getElementById("editAdvancePercent").value=t?((a/t)*100).toFixed(2):"";document.getElementById("editAdvanceSummary").textContent=t?`Order total before shipping: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance."}
 function saveNewOrder(){
-  if(!validateNewAdvancePayment()) return
+  if(!validateNewAdvancePayment()) return;
   if(!newOrderItems.length){alert("Add at least one item.");return}
   const valid=newOrderItems.filter(i=>i.design&&i.size&&Number(i.quantity)>0&&Number.isFinite(Number(i.price)));
   if(!valid.length){alert("Please enter valid order items.");return}
   const orderDate=document.getElementById("newOrderDate").value||localDateKey(new Date());
   const shipping=Number(document.getElementById("newShipping").value)||0;
+  const discount=Number(document.getElementById("newDiscount").value)||0;
   const subtotal=valid.reduce((a,i)=>a+Number(i.price)*Number(i.quantity),0);
-  const order={id:"o_"+Date.now()+Math.random().toString(36).slice(2,7),orderNo:"",orderDate,createdAt:new Date().toISOString(),customerName:document.getElementById("newCustomerName").value.trim(),phone:document.getElementById("newCustomerPhone").value.trim(),address:document.getElementById("newCustomerAddress").value.trim(),shipping,status:document.getElementById("newStatus").value,payment:document.getElementById("newPayment").value,advancePercent:Number(document.getElementById("newAdvancePercent").value)||0,advanceAmount:Number(document.getElementById("newAdvanceAmount").value)||0,discount,notes:document.getElementById("newNotes").value.trim(),items:valid.map(i=>({...i,price:Number(i.price),quantity:Number(i.quantity)})),subtotal,total:Math.max(0,subtotal+shipping-discount)};
+  const total=Math.max(0,subtotal+shipping-discount);
+  const order={id:"o_"+Date.now()+Math.random().toString(36).slice(2,7),orderNo:"",orderDate,createdAt:new Date().toISOString(),customerName:document.getElementById("newCustomerName").value.trim(),phone:document.getElementById("newCustomerPhone").value.trim(),address:document.getElementById("newCustomerAddress").value.trim(),shipping,status:document.getElementById("newStatus").value,payment:document.getElementById("newPayment").value,advancePercent:Number(document.getElementById("newAdvancePercent").value)||0,advanceAmount:Number(document.getElementById("newAdvanceAmount").value)||0,discount,notes:document.getElementById("newNotes").value.trim(),items:valid.map(i=>({...i,price:Number(i.price),quantity:Number(i.quantity)})),subtotal,total};
   apiCall("saveOrder",{order:JSON.stringify(order)},result=>{
     if(result){
       adminOrders=result.orders||adminOrders;
@@ -4313,6 +4354,7 @@ function clearNewOrder(){
   document.getElementById("newPayment").value="Pending";document.getElementById("newAdvancePercent").value="";document.getElementById("newAdvanceAmount").value="";document.getElementById("newAdvanceSummary").textContent="";handleNewPaymentChange();
   document.getElementById("newStatus").value="New";
   renderNewOrderItems();
+  updateNewOrderTotalButton();
 }
 function populateInvoiceSelect(){
   const s=document.getElementById("invoiceOrderSelect");if(!s)return;
@@ -4351,7 +4393,7 @@ function renderInvoice(){
     <div class="invoice-customer"><strong>Customer</strong><br>${adminEsc(o.customerName||"—")}<br>${adminEsc(o.phone||"")}<br>${adminEsc(o.address||"")}<br><br><strong>Payment:</strong> ${adminEsc(o.payment||"Pending")}${o.payment==="Advanced Received"?`<br><strong>Advance:</strong> ${Number(o.advancePercent||0).toFixed(2)}% (${adminMoney(o.advanceAmount||0)})<br><strong>Remaining:</strong> ${adminMoney(Number(o.total||0)-Number(o.advanceAmount||0))}`:""}</div>
     <table class="invoice-lines"><thead><tr><th>Image</th><th>Design</th><th>Size</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead><tbody>
     ${(o.items||[]).map(i=>`<tr><td>${i.image?`<img class="invoice-item-image" src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"—"}</td><td>${adminEsc(i.design)}</td><td>${adminEsc(i.size)}</td><td>${Number(i.quantity)||0}</td><td>${adminMoney(i.price)}</td><td>${adminMoney(Number(i.price)*Number(i.quantity))}</td></tr>`).join("")}</tbody></table>
-    <div style="text-align:right;margin-top:8px;font-size:12px">Items Total: <strong>${adminMoney(o.subtotal)}</strong><br>Shipping: <strong>${adminMoney(o.shipping)}</strong></div>
+    <div style="text-align:right;margin-top:8px;font-size:12px">Items Total: <strong>${adminMoney(o.subtotal)}</strong><br>Shipping: <strong>${adminMoney(o.shipping)}</strong><br>Discount: <strong>${adminMoney(o.discount||0)}</strong></div>
     <div class="invoice-total">Grand Total: ${adminMoney(o.total)}</div>
     <div style="margin-top:10px;padding:8px;background:#f8edf2;border:1px solid #ead5df;border-radius:8px;text-align:center;font-size:11px;font-weight:700;color:#5b1738">Order Date: ${adminEsc(prettyDate(dk))} · Dispatch Window: ${adminEsc(dispatchRange(dk))}</div>
     ${o.notes?`<div style="margin-top:12px;font-size:11px"><strong>Notes:</strong> ${adminEsc(o.notes)}</div>`:""}
