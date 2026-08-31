@@ -2022,6 +2022,24 @@ body {
   #admin-neworder .admin-btn{min-height:42px}
 }
 </style>
+
+<style>
+/* Final requested invoice/payment/advance UI fixes */
+.invoice-layout{display:grid;grid-template-columns:minmax(220px,0.72fr) minmax(0,1.55fr);gap:12px;align-items:start}
+.invoice-list-pane{min-width:0}
+.invoice-detail-pane{min-width:0;position:sticky;top:8px;max-height:calc(100vh - 110px);overflow:auto}
+.invoice-list-pane .invoice-grid{grid-template-columns:1fr}
+.invoice-card.is-selected{border:2px solid #9b2d62;box-shadow:0 8px 22px rgba(91,23,56,.14)}
+.invoice-card-payment{font-size:10px;color:#6f1d45;font-weight:700;margin-top:4px}
+.status-card.disabled{opacity:.45;cursor:not-allowed;filter:grayscale(1);pointer-events:none}
+.admin-payment-filter{min-width:150px}
+.order-payment{font-size:10px;color:#6f1d45;font-weight:700;margin-top:2px}
+.manual-save-message{display:none;margin-top:9px;padding:9px 11px;border:1px solid #b9dfc5;background:#effaf2;color:#176936;border-radius:9px;font-size:12px;font-weight:800}
+.manual-save-message.show{display:block}
+.manual-save-message small{display:block;font-weight:600;color:#247043;margin-top:2px}
+@media(max-width:900px){.invoice-layout{grid-template-columns:1fr}.invoice-detail-pane{position:relative;top:auto;max-height:none;overflow:visible}}
+@media(max-width:560px){.invoice-layout{gap:8px}.invoice-detail-pane .invoice-box{padding:10px}.admin-payment-filter{min-width:100%}}
+</style>
 </head>
 
 
@@ -2376,6 +2394,7 @@ body {
       <div class="admin-card"><h3>All Orders</h3><div class="search-row">
         <input id="orderSearch" placeholder="Search order no, customer, phone or design..." oninput="renderOrdersTable()">
         <select id="orderStatusFilter" onchange="renderOrdersTable()"><option value="">All statuses</option><option>New</option><option>Confirmed</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select>
+        <select id="orderPaymentFilter" class="admin-payment-filter" onchange="renderOrdersTable()"><option value="">All payment statuses</option><option>Pending</option><option>Advanced Received</option><option>Paid</option><option>Partially Paid</option><option>COD</option></select>
         <select id="orderMonthFilter" onchange="renderOrdersTable()"></select><button class="admin-btn" onclick="exportOrders()">⬇ Export CSV</button>
       </div><div class="order-table-wrap" id="ordersTable" style="margin-top:10px"></div></div>
     </section>
@@ -2394,12 +2413,12 @@ body {
           <div class="admin-field"><label>Order Status</label><select id="newStatus"><option>New</option><option>Confirmed</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select></div>
           <div class="admin-field admin-full"><label>Notes</label><textarea id="newNotes" placeholder="Shipping details, customer requests, payment notes..."></textarea></div>
         </div>
-        <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;align-items:center"><button class="admin-btn" onclick="addManualItem()">+ Add Item</button><button class="admin-btn primary" onclick="saveNewOrder()">💾 Save Order</button><button class="admin-btn" onclick="clearNewOrder()">Clear</button><div class="manual-total-strip" style="margin-left:auto;padding:7px 10px;border-radius:9px;background:#fff5f8;border:1px solid #ead8e0"><span>Total Order Value:</span> <span id="newOrderTotalValue">₹0</span></div></div>
+        <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;align-items:center"><button class="admin-btn" onclick="addManualItem()">+ Add Item</button><button class="admin-btn primary" onclick="saveNewOrder()">💾 Save Order</button><button class="admin-btn" onclick="clearNewOrder()">Clear</button><div class="manual-total-strip" style="margin-left:auto;padding:7px 10px;border-radius:9px;background:#fff5f8;border:1px solid #ead8e0"><span>Total Order Value:</span> <span id="newOrderTotalValue">₹0</span></div></div><div id="manualSaveMessage" class="manual-save-message"></div>
         <div class="manual-order-preview" id="newOrderItems"><div class="empty-admin">No items yet. Click Add Item to choose designs.</div></div>
       </div>
     </section>
 
-    <section class="admin-panel" id="admin-invoice"><div class="admin-card"><h3>Invoices</h3><div class="search-row"><select id="invoiceOrderSelect" onchange="renderInvoice()"><option value="">Select an order to view invoice</option></select><select id="invoiceMonthFilter" onchange="renderInvoiceCards()"></select><button class="admin-btn" onclick="printInvoice()">🖨 Print / Save PDF</button></div><div class="invoice-grid" id="invoiceCards" style="margin-top:10px"></div><div class="invoice-pagination" id="invoicePagination"></div><div id="invoicePreview" style="margin-top:10px"><div class="empty-admin">Select an order above or click an invoice card.</div></div></div></section>
+    <section class="admin-panel" id="admin-invoice"><div class="admin-card"><h3>Invoices</h3><div class="search-row"><select id="invoiceOrderSelect" onchange="renderInvoice()"><option value="">Select an order to view invoice</option></select><select id="invoiceMonthFilter" onchange="renderInvoiceCards()"></select><select id="invoicePaymentFilter" class="admin-payment-filter" onchange="renderInvoiceCards()"><option value="">All payment statuses</option><option>Pending</option><option>Advanced Received</option><option>Paid</option><option>Partially Paid</option><option>COD</option></select><button class="admin-btn" onclick="printInvoice()">🖨 Print / Save PDF</button></div><div class="invoice-layout" style="margin-top:10px"><div class="invoice-list-pane"><div class="invoice-grid" id="invoiceCards"></div><div class="invoice-pagination" id="invoicePagination"></div></div><div class="invoice-detail-pane"><div id="invoicePreview"><div class="empty-admin">Select an invoice card to view invoice details.</div></div></div></div></div></section>
 
     <section class="admin-panel" id="admin-settings"><div class="admin-card"><h3>Dashboard Settings</h3><div class="admin-form-grid"><div class="admin-field"><label>Business Name</label><input id="settingBusiness" value="Swapnali's Rangoli"></div><div class="admin-field"><label>Admin PIN</label><input id="settingPin" type="password" placeholder="Change PIN"></div><div class="admin-field admin-full"><label>Invoice Footer</label><input id="settingFooter" value="Thank you for your order! 🌸"></div></div><div style="margin-top:9px"><button class="admin-btn primary" onclick="saveAdminSettings()">Save Settings</button> <button class="admin-btn danger" onclick="clearAllOrders()">Delete All Recorded Orders</button></div><p class="admin-mini" style="margin-top:9px">Orders are stored in Google Sheets through Google Apps Script.</p></div></section>
   </div>
@@ -3917,7 +3936,7 @@ function renderAdminDashboard(){
   document.getElementById("aTotalOrders").textContent=totalOrders;document.getElementById("aSales").textContent=adminMoney(sales);document.getElementById("aAdvance").textContent=adminMoney(advance);document.getElementById("aBalance").textContent=adminMoney(balance);document.getElementById("aUnits").textContent=units;
   const label=dashboardPeriodLabel();document.getElementById("aOrdersNote").textContent=label+" orders";document.getElementById("aSalesNote").textContent=label+" final value";
   const statuses=["New","Confirmed","Dispatched","Delivered","Cancelled"];
-  document.getElementById("statusSummary").innerHTML=statuses.map(st=>`<div class="status-card status-${st}" onclick="openStatusInvoices('${st}')"><span class="status-pill status-${st}">${st}</span><span class="status-count">${scoped.filter(o=>o.status===st).length}</span></div>`).join("");
+  document.getElementById("statusSummary").innerHTML=statuses.map(st=>{const count=scoped.filter(o=>o.status===st).length;const disabled=count===0;const click=disabled?"":` onclick="openStatusInvoices('${st}')"`;const title=disabled?"No orders in this status":`View ${count} ${st} order${count===1?"":"s"}`;return `<div class="status-card status-${st}${disabled?" disabled":""}"${click} title="${title}"><span class="status-pill status-${st}">${st}</span><span class="status-count">${count}</span></div>`}).join("");
   const counts={};active.forEach(o=>(o.items||[]).forEach(i=>{const k=i.design+" — "+i.size;if(!counts[k])counts[k]={qty:0,image:i.image,design:i.design,size:i.size};counts[k].qty+=Number(i.quantity||0)}));
   const top=Object.values(counts).sort((a,b)=>b.qty-a.qty).slice(0,30);
   document.getElementById("topDesigns").innerHTML=top.length?top.map((x,idx)=>`<div class="top-design" title="${adminEsc(x.design)} — ${adminEsc(x.size)}" onclick="openTopDesignInvoice('${adminEsc(x.design)}','${adminEsc(x.size)}')"><img data-design-image="1" data-image-src="${adminEsc(x.image||'')}" alt=""><div class="top-design-name">${adminEsc(x.design)} · ${adminEsc(x.size)}</div><div class="top-design-count">${x.qty}</div></div>`).join(""):"<div class='empty-admin' style='grid-column:1/-1'>No sales for this period.</div>";
@@ -3925,14 +3944,14 @@ function renderAdminDashboard(){
   const upcoming=adminOrders.filter(o=>!['Delivered','Cancelled'].includes(o.status)).sort((a,b)=>orderDateKey(a).localeCompare(orderDateKey(b))).slice(0,9);document.getElementById("upcomingOrders").innerHTML=renderUpcomingOrders(upcoming);
   const recent=adminOrders.slice().sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,8);document.getElementById("recentOrders").innerHTML=renderOrderTableHTML(recent,false)||"<div class='empty-admin'>No orders recorded yet.</div>";
 }
-function openStatusInvoices(status){adminTab('invoice');setTimeout(()=>{const list=adminOrders.filter(o=>o.status===status);renderInvoiceCards(list);},0)}
+function openStatusInvoices(status){const list=adminOrders.filter(o=>o.status===status);if(!list.length)return;selectedInvoiceOrderId="";adminTab("invoice");setTimeout(()=>{const pm=document.getElementById("invoicePaymentFilter");if(pm)pm.value="";const sel=document.getElementById("invoiceOrderSelect");if(sel)sel.value="";const box=document.getElementById("invoicePreview");if(box)box.innerHTML="<div class='empty-admin'>Select an invoice card to view invoice details.</div>";renderInvoiceCards(list);},0)}
 function openTopDesignInvoice(design,size){const o=dashboardScopedOrders().find(o=>o.status!=="Cancelled"&&(o.items||[]).some(i=>i.design===design&&i.size===size));if(o)viewInvoice(o.id);else alert("No invoice found for this design in the selected period.")}
-function renderUpcomingOrders(list){if(!list.length)return "<div class='empty-admin'>No upcoming orders.</div>";return `<div class="upcoming-grid">${list.map(o=>{const dk=orderDateKey(o),thumbs=(o.items||[]).slice(0,4).map(i=>i.image?`<img src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"").join(""),more=(o.items||[]).length>4?`<span class="upcoming-more">+${o.items.length-4}</span>`:"";return `<div class="upcoming-card status-${adminEsc(o.status)}" onclick="viewInvoice('${adminEsc(o.id)}')"><div class="upcoming-head"><div><div class="upcoming-order-no">${adminEsc(o.orderNo)}</div><div class="upcoming-customer">${adminEsc(o.customerName||'Walk-in')}</div></div><span class="status-pill status-${adminEsc(o.status)}">${adminEsc(o.status)}</span></div><div class="upcoming-thumbs">${thumbs}${more}</div><div class="upcoming-date">Dispatch: ${adminEsc(dispatchRange(dk))}</div><div class="upcoming-total">${adminMoney(o.total)}</div></div>`}).join("")}</div>`}
+function renderUpcomingOrders(list){if(!list.length)return "<div class='empty-admin'>No upcoming orders.</div>";return `<div class="upcoming-grid">${list.map(o=>{const dk=orderDateKey(o),thumbs=(o.items||[]).slice(0,4).map(i=>i.image?`<img src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"").join(""),more=(o.items||[]).length>4?`<span class="upcoming-more">+${o.items.length-4}</span>`:"";return `<div class="upcoming-card status-${adminEsc(o.status)}" onclick="viewInvoice('${adminEsc(o.id)}')"><div class="upcoming-head"><div><div class="upcoming-order-no">${adminEsc(o.orderNo)}</div><div class="upcoming-customer">${adminEsc(o.customerName||'Walk-in')}</div><div class="order-payment">Payment: ${adminEsc(o.payment||'Pending')}</div></div><span class="status-pill status-${adminEsc(o.status)}">${adminEsc(o.status)}</span></div><div class="upcoming-thumbs">${thumbs}${more}</div><div class="upcoming-date">Dispatch: ${adminEsc(dispatchRange(dk))}</div><div class="upcoming-total">${adminMoney(o.total)}</div></div>`}).join("")}</div>`}
 function filterByMonth(list,key){if(!key)return list.slice();return list.filter(o=>orderDateKey(o).slice(0,7)===key)}
 
 function renderOrderTableHTML(list,all){
   if(!list.length)return"";
-  return `<table class="order-table"><thead><tr><th>Order</th><th>Order Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th>${all?"<th>Actions</th>":""}</tr></thead><tbody>${list.map(o=>{
+  return `<table class="order-table"><thead><tr><th>Order</th><th>Order Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th>${all?"<th>Actions</th>":""}</tr></thead><tbody>${list.map(o=>{
     const thumbs=(o.items||[]).slice(0,4).map(i=>i.image?`<img class="admin-thumb" src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"").join("");
     const more=(o.items||[]).length>4?`<span class="admin-thumb-more">+${o.items.length-4}</span>`:"";
     return `<tr>
@@ -3941,6 +3960,7 @@ function renderOrderTableHTML(list,all){
       <td>${adminEsc(o.customerName||"—")}<br><span class="admin-mini">${adminEsc(o.phone||"")}</span></td>
       <td><div class="admin-thumb-stack">${thumbs}${more}</div><span class="admin-mini">${(o.items||[]).reduce((a,i)=>a+Number(i.quantity||0),0)} units</span></td>
       <td>${adminMoney(o.total)}</td>
+      <td><span class="order-payment">${adminEsc(o.payment||"Pending")}</span></td>
       <td><select onchange="changeOrderStatus('${adminEsc(o.id)}',this.value)" style="padding:5px;border:1px solid #ead5df;border-radius:7px;font-size:10px">
         ${["New","Confirmed","Dispatched","Delivered","Cancelled"].map(st=>`<option ${o.status===st?"selected":""}>${st}</option>`).join("")}
       </select></td>
@@ -3952,7 +3972,7 @@ function renderOrdersTable(){
   const q=(document.getElementById("orderSearch")?.value||"").toLowerCase().trim();
   const st=document.getElementById("orderStatusFilter")?.value||"";
   const month=document.getElementById("orderMonthFilter")?.value||"";
-  let list=filterByMonth(adminOrders,month).filter(o=>!st||o.status===st).filter(o=>!q||[o.orderNo,o.customerName,o.phone,o.address,...(o.items||[]).flatMap(i=>[i.design,i.size])].join(" ").toLowerCase().includes(q)).sort((a,b)=>orderDateKey(b).localeCompare(orderDateKey(a))||new Date(b.createdAt)-new Date(a.createdAt));
+  let list=filterByMonth(adminOrders,month).filter(o=>!st||o.status===st).filter(o=>!pay||o.payment===pay).filter(o=>!q||[o.orderNo,o.customerName,o.phone,o.address,...(o.items||[]).flatMap(i=>[i.design,i.size])].join(" ").toLowerCase().includes(q)).sort((a,b)=>orderDateKey(b).localeCompare(orderDateKey(a))||new Date(b.createdAt)-new Date(a.createdAt));
   document.getElementById("ordersTable").innerHTML=renderOrderTableHTML(list,true)||"<div class='empty-admin'>No matching orders.</div>";
 }
 function changeOrderStatus(id,status){
@@ -4171,29 +4191,24 @@ function saveNewOrder(){
   if(!valid.length){alert("Please enter valid order items.");return}
 
   const orderDate=document.getElementById("newOrderDate").value||localDateKey(new Date());
-  const shipping=Number(document.getElementById("newShipping").value)||0;
-  const discount=Number(document.getElementById("newDiscount").value)||0;
+  const shipping=Math.max(0,Number(document.getElementById("newShipping").value)||0);
+  const discount=Math.max(0,Number(document.getElementById("newDiscount").value)||0);
   const subtotal=valid.reduce((a,i)=>a+Number(i.price)*Number(i.quantity),0);
   const total=Math.max(0,subtotal+shipping-discount);
+  const payment=document.getElementById("newPayment").value;
+  const advancePercent=payment==="Advanced Received"?(Number(document.getElementById("newAdvancePercent").value)||0):0;
+  const advanceAmount=payment==="Advanced Received"?(Number(document.getElementById("newAdvanceAmount").value)||0):0;
 
   const order={
     id:"o_"+Date.now()+Math.random().toString(36).slice(2,7),
-    orderNo:"",
-    orderDate,
-    createdAt:new Date().toISOString(),
+    orderNo:"",orderDate,createdAt:new Date().toISOString(),
     customerName:document.getElementById("newCustomerName").value.trim(),
     phone:document.getElementById("newCustomerPhone").value.trim(),
     address:document.getElementById("newCustomerAddress").value.trim(),
-    shipping,
-    status:document.getElementById("newStatus").value,
-    payment:document.getElementById("newPayment").value,
-    advancePercent:Number(document.getElementById("newAdvancePercent").value)||0,
-    advanceAmount:Number(document.getElementById("newAdvanceAmount").value)||0,
-    discount,
+    shipping,status:document.getElementById("newStatus").value,payment,
+    advancePercent,advanceAmount,discount,
     notes:document.getElementById("newNotes").value.trim(),
-    items:valid.map(i=>({...i,price:Number(i.price),quantity:Number(i.quantity)})),
-    subtotal,
-    total
+    items:valid.map(i=>({...i,price:Number(i.price),quantity:Number(i.quantity)})),subtotal,total
   };
 
   const saveButton=document.querySelector('#admin-neworder button[onclick="saveNewOrder()"]');
@@ -4201,28 +4216,20 @@ function saveNewOrder(){
 
   apiCall("saveOrder",{order:JSON.stringify(order)},(result,error)=>{
     if(saveButton){saveButton.disabled=false;saveButton.innerHTML=saveButton.dataset.originalText||"💾 Save Order"}
-    if(error||!result){return}
+    if(error||!result)return;
     if(result.ok===false){alert(result.error||"Order could not be saved.");return}
 
     adminOrders=result.orders||adminOrders;
     const saved=(result.orders||[]).find(x=>x.id===order.id);
     const no=saved?.orderNo||"R-?";
-    alert(`Order ${no} saved successfully to Google Sheets.`);
+
     clearNewOrder();
     refreshAdmin();
-    selectedInvoiceOrderId=order.id;
-    setTimeout(()=>viewInvoice(order.id),350);
+    adminTab("neworder");
+
+    const msg=document.getElementById("manualSaveMessage");
+    if(msg){msg.innerHTML=`✓ Order <strong>${adminEsc(no)}</strong> saved successfully.`+`<small>Ready for the next new order.</small>`;msg.classList.add("show");setTimeout(()=>msg.classList.remove("show"),6000)}
   });
-}
-function clearNewOrder(){
-  newOrderItems=[];
-  ["newCustomerName","newCustomerPhone","newCustomerAddress","newNotes"].forEach(id=>document.getElementById(id).value="");
-  document.getElementById("newOrderDate").value=localDateKey(new Date());
-  document.getElementById("newShipping").value=0;document.getElementById("newDiscount").value=0;
-  document.getElementById("newPayment").value="Pending";document.getElementById("newAdvancePercent").value="";document.getElementById("newAdvanceAmount").value="";document.getElementById("newAdvanceSummary").textContent="";handleNewPaymentChange();
-  document.getElementById("newStatus").value="New";
-  renderNewOrderItems();
-  updateManualOrderTotal();
 }
 function populateInvoiceSelect(){
   const s=document.getElementById("invoiceOrderSelect");if(!s)return;
@@ -4230,13 +4237,25 @@ function populateInvoiceSelect(){
   const list=filterByMonth(adminOrders,month).slice().sort((a,b)=>orderDateKey(b).localeCompare(orderDateKey(a)));
   s.innerHTML='<option value="">Select an order to view invoice</option>'+list.map(o=>`<option value="${adminEsc(o.id)}" ${o.id===selectedInvoiceOrderId?"selected":""}>${adminEsc(o.orderNo)} — ${adminEsc(o.customerName||"Walk-in")} — ${adminMoney(o.total)}</option>`).join("");
 }
-function viewInvoice(id){selectedInvoiceOrderId=id;adminTab("invoice");populateInvoiceSelect();document.getElementById("invoiceOrderSelect").value=id;renderInvoice();renderInvoiceCards()}
-function renderInvoiceCards(overrideList){const box=document.getElementById("invoiceCards"),pager=document.getElementById("invoicePagination");if(!box)return;const month=document.getElementById("invoiceMonthFilter")?.value||"";const list=(overrideList||filterByMonth(adminOrders,month)).slice().sort((a,b)=>orderDateKey(b).localeCompare(orderDateKey(a)));const pages=Math.max(1,Math.ceil(list.length/INVOICE_PAGE_SIZE));if(invoicePage>pages)invoicePage=pages;const start=(invoicePage-1)*INVOICE_PAGE_SIZE,pageItems=list.slice(start,start+INVOICE_PAGE_SIZE);box.innerHTML=pageItems.length?pageItems.map(o=>`<div class="invoice-card" onclick="viewInvoice('${adminEsc(o.id)}')"><div class="invoice-card-head"><div><div class="invoice-card-no">${adminEsc(o.orderNo)}</div><div class="invoice-card-date">${prettyDate(orderDateKey(o))}</div></div><span class="status-pill status-${adminEsc(o.status)}">${adminEsc(o.status)}</span></div><div class="invoice-card-customer">${adminEsc(o.customerName||"Walk-in")}</div><div class="invoice-card-thumbs">${(o.items||[]).slice(0,4).map(i=>i.image?`<img src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"").join("")}</div><div class="invoice-card-total">${adminMoney(o.total)}</div></div>`).join(""):"<div class='empty-admin' style='grid-column:1/-1'>No invoices found.</div>";pager.innerHTML=pages>1?`<button onclick="invoicePageChange(${invoicePage-1})" ${invoicePage<=1?"disabled":""}>←</button>${Array.from({length:pages},(_,i)=>`<button class="${i+1===invoicePage?"active":""}" onclick="invoicePageChange(${i+1})">${i+1}</button>`).join("")}<button onclick="invoicePageChange(${invoicePage+1})" ${invoicePage>=pages?"disabled":""}>→</button>`:""}
+function viewInvoice(id){selectedInvoiceOrderId=id;adminTab("invoice");populateInvoiceSelect();const sel=document.getElementById("invoiceOrderSelect");if(sel)sel.value=id;renderInvoice();renderInvoiceCards()}
+function renderInvoiceCards(overrideList){
+  const box=document.getElementById("invoiceCards"),pager=document.getElementById("invoicePagination");
+  if(!box)return;
+  const month=document.getElementById("invoiceMonthFilter")?.value||"";
+  const payment=document.getElementById("invoicePaymentFilter")?.value||"";
+  const base=overrideList||filterByMonth(adminOrders,month);
+  const list=base.filter(o=>!payment||o.payment===payment).slice().sort((a,b)=>orderDateKey(b).localeCompare(orderDateKey(a)));
+  const pages=Math.max(1,Math.ceil(list.length/INVOICE_PAGE_SIZE));
+  if(invoicePage>pages)invoicePage=pages;
+  const start=(invoicePage-1)*INVOICE_PAGE_SIZE,pageItems=list.slice(start,start+INVOICE_PAGE_SIZE);
+  box.innerHTML=pageItems.length?pageItems.map(o=>`<div class="invoice-card ${selectedInvoiceOrderId===o.id?"is-selected":""}" onclick="viewInvoice('${adminEsc(o.id)}')"><div class="invoice-card-head"><div><div class="invoice-card-no">${adminEsc(o.orderNo)}</div><div class="invoice-card-date">${prettyDate(orderDateKey(o))}</div></div><span class="status-pill status-${adminEsc(o.status)}">${adminEsc(o.status)}</span></div><div class="invoice-card-customer">${adminEsc(o.customerName||"Walk-in")}</div><div class="invoice-card-payment">Payment: ${adminEsc(o.payment||"Pending")}</div><div class="invoice-card-thumbs">${(o.items||[]).slice(0,4).map(i=>i.image?`<img src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"").join("")}</div><div class="invoice-card-total">${adminMoney(o.total)}</div></div>`).join(""):"<div class='empty-admin'>No invoices found.</div>";
+  pager.innerHTML=pages>1?`<button onclick="invoicePageChange(${invoicePage-1})" ${invoicePage<=1?"disabled":""}>←</button>${Array.from({length:pages},(_,i)=>`<button class="${i+1===invoicePage?"active":""}" onclick="invoicePageChange(${i+1})">${i+1}</button>`).join("")}<button onclick="invoicePageChange(${invoicePage+1})" ${invoicePage>=pages?"disabled":""}>→</button>`:"";
+}
 function invoicePageChange(page){invoicePage=Math.max(1,page);renderInvoiceCards()}
 function renderInvoice(){
   const id=document.getElementById("invoiceOrderSelect").value;selectedInvoiceOrderId=id;const o=adminOrders.find(x=>x.id===id),box=document.getElementById("invoicePreview");if(!o){box.innerHTML="<div class='empty-admin'>Select an order above or click an invoice card.</div>";return}
   const set=adminSettings||{},dk=orderDateKey(o),itemsTotal=Number(o.subtotal||0),shipping=Number(o.shipping||0),discount=Number(o.discount||0),grand=Math.max(0,itemsTotal+shipping-discount),deliveredDate=o.status==="Delivered"&&o.updatedAt?prettyDate(dateInputValue(o.updatedAt)):"";
-  box.innerHTML=`<div class="invoice-box" id="printInvoiceArea"><div class="invoice-head"><div class="invoice-head-col"><div class="invoice-customer-name">${adminEsc(o.customerName||"Walk-in")}</div><div class="invoice-meta">Payment: <strong>${adminEsc(o.payment||"Pending")}</strong>${o.payment==="Advanced Received"?`<br>Advance: ${Number(o.advancePercent||0).toFixed(2)}% (${adminMoney(o.advanceAmount||0)})`:""}</div></div><div class="invoice-head-col"><div class="invoice-brand">${adminEsc(set.businessName||"Swapnali's Rangoli")}</div><div class="invoice-meta">Order Invoice</div></div><div class="invoice-head-col"><div class="invoice-meta"><strong>${adminEsc(o.orderNo)}</strong><br>Order Date: ${adminEsc(prettyDate(dk))}<br>Status: <strong>${adminEsc(o.status)}</strong>${deliveredDate?`<br>Delivered Date: ${adminEsc(deliveredDate)}`:""}</div></div></div><div class="invoice-address">${adminEsc(o.address||"Address not provided")}</div><table class="invoice-lines"><thead><tr><th>Image</th><th>Design</th><th>Size</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead><tbody>${(o.items||[]).map(i=>`<tr><td>${i.image?`<img class="invoice-item-image" src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"—"}</td><td>${adminEsc(i.design)}</td><td>${adminEsc(i.size)}</td><td>${Number(i.quantity)||0}</td><td>${adminMoney(i.price)}</td><td>${adminMoney(Number(i.price)*Number(i.quantity))}</td></tr>`).join("")}</tbody></table><div class="invoice-total"><div>Total: ${adminMoney(itemsTotal)}</div><div>Shipping: ${adminMoney(shipping)}</div><div>Discount: −${adminMoney(discount)}</div><div class="grand">Grand Total: ${adminMoney(grand)}</div></div>${Number(o.advanceAmount||0)>0?`<div style="text-align:right;margin-top:5px;font-size:11px;color:#6f1d45">Advance Received: ${adminMoney(o.advanceAmount)} · Balance Due: ${adminMoney(Math.max(0,grand-Number(o.advanceAmount||0)))}</div>`:""}<div style="margin-top:10px;padding:7px;background:#f8edf2;border:1px solid #ead5df;border-radius:8px;text-align:center;font-size:9px;font-weight:700;color:#5b1738">Order Date: ${adminEsc(prettyDate(dk))} · Dispatch Window: ${adminEsc(dispatchRange(dk))}</div>${o.notes?`<div style="margin-top:10px;font-size:10px"><strong>Notes:</strong> ${adminEsc(o.notes)}</div>`:""}<div style="margin-top:14px;border-top:1px solid #ead8e0;padding-top:8px;text-align:center;font-size:9px;color:#806b74">${adminEsc(set.footer||"Thank you for your order! 🌸")}</div></div>`;
+  box.innerHTML=`<div class="invoice-box" id="printInvoiceArea"><div class="invoice-head"><div class="invoice-head-col"><div class="invoice-customer-name">${adminEsc(o.customerName||"Walk-in")}</div><div class="invoice-meta">Payment: <strong>${adminEsc(o.payment||"Pending")}</strong>${o.payment==="Advanced Received"?`<br>Advance: ${Number(o.advancePercent||0).toFixed(2)}% (${adminMoney(o.advanceAmount||0)})`:""}</div></div><div class="invoice-head-col"><div class="invoice-brand">${adminEsc(set.businessName||"Swapnali's Rangoli")}</div><div class="invoice-meta" style="font-size:14px;font-weight:800;color:#5b1738">Order Invoice</div><div class="invoice-meta" style="margin-top:4px">@rangoli_by_swapnali&nbsp; | &nbsp;7972313283</div></div><div class="invoice-head-col"><div class="invoice-meta"><strong>${adminEsc(o.orderNo)}</strong><br>Order Date: ${adminEsc(prettyDate(dk))}<br>Status: <strong>${adminEsc(o.status)}</strong>${deliveredDate?`<br>Delivered Date: ${adminEsc(deliveredDate)}`:""}</div></div></div><div class="invoice-address">${adminEsc(o.address||"Address not provided")}</div><table class="invoice-lines"><thead><tr><th>Image</th><th>Design</th><th>Size</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr></thead><tbody>${(o.items||[]).map(i=>`<tr><td>${i.image?`<img class="invoice-item-image" src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"—"}</td><td>${adminEsc(i.design)}</td><td>${adminEsc(i.size)}</td><td>${Number(i.quantity)||0}</td><td>${adminMoney(i.price)}</td><td>${adminMoney(Number(i.price)*Number(i.quantity))}</td></tr>`).join("")}</tbody></table><div class="invoice-total"><div>Total: ${adminMoney(itemsTotal)}</div><div>Shipping: ${adminMoney(shipping)}</div><div>Discount: −${adminMoney(discount)}</div><div class="grand">Grand Total: ${adminMoney(grand)}</div></div>${Number(o.advanceAmount||0)>0?`<div style="text-align:right;margin-top:5px;font-size:11px;color:#6f1d45">Advance Received: ${adminMoney(o.advanceAmount)} · Balance Due: ${adminMoney(Math.max(0,grand-Number(o.advanceAmount||0)))}</div>`:""}<div style="margin-top:10px;padding:7px;background:#f8edf2;border:1px solid #ead5df;border-radius:8px;text-align:center;font-size:9px;font-weight:700;color:#5b1738">Order Date: ${adminEsc(prettyDate(dk))} · Dispatch Window: ${adminEsc(dispatchRange(dk))}</div>${o.notes?`<div style="margin-top:10px;font-size:10px"><strong>Notes:</strong> ${adminEsc(o.notes)}</div>`:""}<div style="margin-top:14px;border-top:1px solid #ead8e0;padding-top:8px;text-align:center;font-size:9px;color:#806b74">${adminEsc(set.footer||"Thank you for your order! 🌸")}</div></div>`;
 }
 function printInvoice(){
   if(!selectedInvoiceOrderId){alert("Select an order first.");return}
