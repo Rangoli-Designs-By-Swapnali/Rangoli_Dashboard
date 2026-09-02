@@ -13,9 +13,7 @@ function replaceCart(source){
 }
 function updateManualSelectionBar(){
   const total=document.getElementById("manualSelectionTotal");
-  if(!total)return;
-  if(stockSelectionMode){updateStockSelectionBar();return}
-  total.textContent=adminMoney(getCartTotal());
+  if(total)total.textContent=adminMoney(getCartTotal());
 }
 function addManualItem(){
   itemSelectionMode="new";
@@ -30,10 +28,6 @@ function addManualItem(){
   document.body.style.overflow="";
   document.body.classList.add("manual-selection-active");
   document.getElementById("manualSelectionBar").classList.add("show");
-  const cancel=document.getElementById("selectionCancelBtn");
-  const confirm=document.getElementById("selectionConfirmBtn");
-  if(cancel)cancel.textContent="← Cancel";
-  if(confirm)confirm.innerHTML='✓ Add Items <span id="manualSelectionTotal">₹0</span>';
   updateManualSelectionBar();
   window.scrollTo({top:0,behavior:"auto"});
 }
@@ -57,76 +51,60 @@ function selectedCatalogueItems(){
   }));
   return selected;
 }
-function removeNewItem(i){newOrderItems.splice(i,1);renderNewOrderItems()}
-function changeManualItemQuantity(i,amount,event){
-  if(event){event.preventDefault();event.stopPropagation()}
-  const item=newOrderItems[i];if(!item)return;
-  const next=(Number(item.quantity)||0)+amount;
-  if(next<=0)newOrderItems.splice(i,1);else item.quantity=next;
-  renderNewOrderItems();
-  updateManualOrderTotal();
-}
-
-
-/* =========================================================
-   ADD STOCK SELECTION FLOW
-========================================================= */
 function startAddStock(){
   stockSelectionMode=true;
   stockSelection={};
   manualSelectionSavedCart=copyCart(cart);
-  replaceCart({});
-  document.getElementById("adminScreen")?.classList.remove("show");
+  Object.keys(cart).forEach(key=>delete cart[key]);
+  document.getElementById("adminScreen").classList.remove("show");
   document.body.style.overflow="";
   document.body.classList.add("manual-selection-active");
-  const bar=document.getElementById("manualSelectionBar");
-  if(bar)bar.classList.add("show");
+  document.getElementById("manualSelectionBar").classList.add("show");
   const cancel=document.getElementById("selectionCancelBtn");
-  const confirm=document.getElementById("selectionConfirmBtn");
   if(cancel)cancel.textContent="← Cancel";
-  if(confirm)confirm.innerHTML='✓ Add Stock <span id="manualSelectionTotal">0 designs</span>';
   renderDesigns();
   updateStockSelectionBar();
   window.scrollTo({top:0,behavior:"auto"});
 }
 function cancelStockSelection(){
   if(!stockSelectionMode)return;
-  stockSelectionMode=false;
-  stockSelection={};
-  replaceCart(manualSelectionSavedCart||{});
+  Object.keys(cart).forEach(key=>delete cart[key]);
+  Object.keys(manualSelectionSavedCart||{}).forEach(key=>cart[key]=manualSelectionSavedCart[key]);
   manualSelectionSavedCart=null;
+  stockSelection={};
+  stockSelectionMode=false;
   document.body.classList.remove("manual-selection-active");
-  document.getElementById("manualSelectionBar")?.classList.remove("show");
-  document.getElementById("adminScreen")?.classList.add("show");
+  document.getElementById("manualSelectionBar").classList.remove("show");
+  renderDesigns();
+  updateCart();
+  document.getElementById("adminScreen").classList.add("show");
   document.body.style.overflow="hidden";
   adminTab("stocks");
-  renderDesigns();
 }
 function confirmStockSelection(){
   if(!stockSelectionMode)return;
   const items=selectedStockItems();
-  if(!items.length){alert("Select at least one design and enter its quantity.");return}
-  const btn=document.getElementById("selectionConfirmBtn");
-  if(btn)btn.disabled=true;
+  if(!items.length){alert("Select at least one design and quantity.");return}
+  const saved=manualSelectionSavedCart||{};
   apiCall("addStock",{items:JSON.stringify(items)},(result,error)=>{
-    if(btn)btn.disabled=false;
     if(error||!result)return;
-    stockSelectionMode=false;
-    stockSelection={};
-    replaceCart(manualSelectionSavedCart||{});
+    Object.keys(cart).forEach(key=>delete cart[key]);
+    Object.keys(saved).forEach(key=>cart[key]=saved[key]);
     manualSelectionSavedCart=null;
+    stockSelection={};
+    stockSelectionMode=false;
     document.body.classList.remove("manual-selection-active");
-    document.getElementById("manualSelectionBar")?.classList.remove("show");
-    document.getElementById("adminScreen")?.classList.add("show");
-    document.body.style.overflow="hidden";
-    adminTab("stocks");
+    document.getElementById("manualSelectionBar").classList.remove("show");
     renderDesigns();
-    refreshStocks();
-    const added=items.reduce((a,x)=>a+Number(x.quantity||0),0);
-    const msg=result.stockShortages&&result.stockShortages.length?` Stock added. ${result.stockShortages.map(x=>x.design+": "+x.quantity).join(", ")} still need preparation.`:` Stock added successfully.`;
-    alert(`${added} stock unit${added===1?"":"s"} added.${msg}`);
+    updateCart();
+    adminStocks=Array.isArray(result.stocks)?result.stocks:adminStocks;
+    document.getElementById("adminScreen").classList.add("show");
+    document.body.style.overflow="hidden";
+    adminTab("stocks",false);
+    renderStocks();
   });
 }
+
 function cancelManualItemSelection(){
   if(stockSelectionMode){cancelStockSelection();return}
   if(!manualItemSelectionActive)return;
@@ -148,7 +126,9 @@ function confirmManualItemSelection(){
       if(existing)existing.quantity=(Number(existing.quantity)||0)+item.quantity;
       else editOrderItemsDraft.push(item);
     });
-  }else newOrderItems=selected;
+  }else{
+    newOrderItems=selected;
+  }
   const saved=manualSelectionSavedCart||{};
   manualSelectionSavedCart=null;
   const wasEdit=itemSelectionMode==="edit";
@@ -156,4 +136,13 @@ function confirmManualItemSelection(){
   replaceCart(saved);
   if(wasEdit){document.getElementById("adminScreen").classList.add("show");document.body.style.overflow="hidden";document.getElementById("editOrderModal").classList.add("show");renderEditOrderItems()}
   else{document.getElementById("adminScreen").classList.add("show");document.body.style.overflow="hidden";adminTab("neworder");renderNewOrderItems();updateManualOrderTotal()}
+}
+function removeNewItem(i){newOrderItems.splice(i,1);renderNewOrderItems()}
+function changeManualItemQuantity(i,amount,event){
+  if(event){event.preventDefault();event.stopPropagation()}
+  const item=newOrderItems[i];if(!item)return;
+  const next=(Number(item.quantity)||0)+amount;
+  if(next<=0)newOrderItems.splice(i,1);else item.quantity=next;
+  renderNewOrderItems();
+  updateManualOrderTotal();
 }

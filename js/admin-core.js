@@ -7,6 +7,7 @@
 ========================================================= */
 const ADMIN_API_URL = "https://script.google.com/macros/s/AKfycbxf_MeOG9cfDho7xNcagWAbj9zXOlwuXWuC6JHH6K6-R-aVdMu-Th9Jbt2MgCtOWfE7qw/exec";
 const ADMIN_API_KEY = "ee0257ba72c1487e9c0ed77a0deeeb20";
+const LOCAL_DEV_BYPASS_ADMIN = ["localhost", "127.0.0.1"].includes(location.hostname);
 
 let adminOrders = [];
 let adminStocks = [];
@@ -99,6 +100,10 @@ function apiCall(action, params={}, callback){
 }
 
 function requestAdminAccess(){
+  if(LOCAL_DEV_BYPASS_ADMIN){
+    openAdmin();
+    return;
+  }
   document.getElementById("adminPinInput").value="";
   document.getElementById("pinModal").classList.add("show");
   setTimeout(()=>document.getElementById("adminPinInput").focus(),80);
@@ -162,7 +167,6 @@ function adminTab(tab,syncUrl=true){
     renderNewOrderItems();
   }
   if(tab==="invoice"){populateInvoiceSelect();renderInvoiceCards()}
-  if(tab==="stocks"){refreshStocks()}
   if(tab==="settings")loadAdminSettingsForm();
 }
 function refreshAdmin(){
