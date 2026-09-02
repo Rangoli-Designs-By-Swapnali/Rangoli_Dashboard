@@ -162,6 +162,7 @@ function adminTab(tab,syncUrl=true){
     renderNewOrderItems();
   }
   if(tab==="invoice"){populateInvoiceSelect();renderInvoiceCards()}
+  if(tab==="stocks"){refreshStocks()}
   if(tab==="settings")loadAdminSettingsForm();
 }
 function refreshAdmin(){
