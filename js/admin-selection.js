@@ -132,13 +132,6 @@ function cancelStockSelection(){
   document.body.style.overflow="hidden";
   adminTab("stocks");
 }
-function selectedStockItems(){
-  return designs.map(d=>{
-    const quantity=Math.max(0,Math.floor(Number(stockSelection[stockKey(d.name)]||0)));
-    if(quantity<=0)return null;
-    return {design:d.name,image:d.image||"",quantity};
-  }).filter(Boolean);
-}
 function updateStockSelectionBar(){
   const total=selectedStockItems().reduce((sum,item)=>sum+item.quantity,0);
   const el=document.getElementById("manualSelectionTotal");

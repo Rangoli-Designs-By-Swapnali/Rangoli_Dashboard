@@ -21,7 +21,7 @@ function renderInvoiceCards(overrideList){
   const start=(invoicePage-1)*INVOICE_PAGE_SIZE,pageItems=list.slice(start,start+INVOICE_PAGE_SIZE);
   box.innerHTML=pageItems.length?pageItems.map(o=>`<div class="invoice-card ${selectedInvoiceOrderId===o.id?"is-selected ":""}${orderVisualClass(o)}" onclick="viewInvoice('${adminEsc(o.id)}')">
     <div class="invoice-card-line"><strong>${adminEsc(o.orderNo)}</strong><span>Order Date : ${adminEsc(prettyDate(orderDateKey(o)))}</span><span class="status-pill status-${adminEsc(o.status)}">${adminEsc(o.status)}</span></div>
-    <div class="invoice-card-line"><span>Name : ${adminEsc(o.customerName||"Walk-in")}</span><strong>Total Amount : ${adminMoney(o.total)}</strong></div>
+    <div class="invoice-card-line"><strong>Name : ${adminEsc(o.customerName||"Walk-in")}</strong><strong>Total Amount : ${adminMoney(o.total)}</strong></div>
     ${orderRemaining(o)>0?`<div class="invoice-card-due">Remaining Amount : ${adminMoney(orderRemaining(o))}</div>`:""}
   </div>`).join(""):"<div class='empty-admin'>No invoices found.</div>";
   pager.innerHTML=pages>1?`<button onclick="invoicePageChange(${invoicePage-1})" ${invoicePage<=1?"disabled":""}>←</button>${Array.from({length:pages},(_,i)=>`<button class="${i+1===invoicePage?"active":""}" onclick="invoicePageChange(${i+1})">${i+1}</button>`).join("")}<button onclick="invoicePageChange(${invoicePage+1})" ${invoicePage>=pages?"disabled":""}>→</button>`:"";

@@ -161,6 +161,9 @@ function adminTab(tab,syncUrl=true){
 
   if(syncUrl)setAdminTabHash(tab);
 
+  const addStockBtn=document.getElementById("adminAddStockBtn");
+  if(addStockBtn)addStockBtn.style.display=tab==="stocks"?"inline-flex":"none";
+
   if(tab==="dashboard")renderAdminDashboard();
   if(tab==="orders"){populateMonthFilters();renderOrdersTable()}
   if(tab==="stocks"){refreshStocks()}

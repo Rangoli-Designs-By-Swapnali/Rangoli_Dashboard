@@ -353,32 +353,26 @@ function renderDesigns() {
     bottom.className="design-bottom";
 
     if(stockSelectionMode){
-      const key=stockKeyForSite(design.name);
-      const quantity=Math.max(0,Math.floor(Number(stockSelection[key])||0));
-      design.variants.forEach(variant=>{
+      design.variants.forEach((variant,variantIndex)=>{
+        const key=stockVariantKeyForSite(design.name,variant.size);
+        const quantity=Math.max(0,Math.floor(Number(stockSelection[key])||0));
         const row=document.createElement("div");
         row.className="variant-row";
         row.innerHTML=`
+          <label class="select-label" title="Select size">
+            <input type="checkbox" ${quantity>0?"checked":""} onchange="toggleStockVariant(${JSON.stringify(design.name)},${JSON.stringify(variant.size)},this.checked)">
+          </label>
           <span class="design-size">Size: ${escapeHtml(variant.size)}</span>
           <span class="design-price">₹${formatPrice(variant.price)}</span>
+          <div class="quantity-controls">
+            <button type="button" class="quantity-btn" onclick="changeStockSelectionQuantity(${JSON.stringify(design.name)},${JSON.stringify(variant.size)},-1,event)">−</button>
+            <input type="number" min="0" step="1" value="${quantity}" style="width:42px;text-align:center;border:0;background:transparent;font-weight:700;color:#5b1738" onchange="setStockSelectionQuantity(${JSON.stringify(design.name)},${JSON.stringify(variant.size)},this.value)">
+            <button type="button" class="quantity-btn" onclick="changeStockSelectionQuantity(${JSON.stringify(design.name)},${JSON.stringify(variant.size)},1,event)">+</button>
+          </div>
         `;
         bottom.appendChild(row);
       });
-      const stockRow=document.createElement("div");
-      stockRow.className="variant-row";
-      stockRow.innerHTML=`
-        <label class="select-label" title="Select design">
-          <input type="checkbox" ${quantity>0?"checked":""} onchange="toggleStockDesign(${JSON.stringify(design.name)},this.checked)">
-        </label>
-        <span class="design-size">Stock Quantity</span>
-        <div class="quantity-controls">
-          <button type="button" class="quantity-btn" onclick="changeStockSelectionQuantity(${JSON.stringify(design.name)},-1,event)">−</button>
-          <input type="number" min="0" step="1" value="${quantity}" style="width:42px;text-align:center;border:0;background:transparent;font-weight:700;color:#5b1738" onchange="setStockSelectionQuantity(${JSON.stringify(design.name)},this.value)">
-          <button type="button" class="quantity-btn" onclick="changeStockSelectionQuantity(${JSON.stringify(design.name)},1,event)">+</button>
-        </div>
-      `;
-      bottom.appendChild(stockRow);
-      card.classList.toggle("selected",quantity>0);
+      card.classList.toggle("selected",design.variants.some(v=>Number(stockSelection[stockVariantKeyForSite(design.name,v.size)])>0));
     }else{
       design.variants.forEach((variant,variantIndex)=>{
         const row=document.createElement("div");
@@ -404,8 +398,57 @@ function renderDesigns() {
   });
 }
 function stockKeyForSite(design){return String(design||"").trim().toLowerCase()}
-
-
+function stockVariantKeyForSite(design,size){return String(design||"").trim().toLowerCase()+"||"+String(size||"").trim().toLowerCase()}
+function toggleStockVariant(designName,size,checked){
+  const key=stockVariantKeyForSite(designName,size);
+  if(checked)stockSelection[key]=Math.max(1,Number(stockSelection[key])||1);
+  else delete stockSelection[key];
+  updateStockSelectionCard(designName,size);
+  updateStockSelectionBar();
+}
+function setStockSelectionQuantity(designName,size,value){
+  const key=stockVariantKeyForSite(designName,size);
+  const quantity=Math.max(0,Math.floor(Number(value)||0));
+  if(quantity<=0)delete stockSelection[key];
+  else stockSelection[key]=quantity;
+  updateStockSelectionCard(designName,size);
+  updateStockSelectionBar();
+}
+function changeStockSelectionQuantity(designName,size,amount,event){
+  if(event){event.preventDefault();event.stopPropagation()}
+  const key=stockVariantKeyForSite(designName,size);
+  const next=Math.max(0,(Number(stockSelection[key])||0)+amount);
+  setStockSelectionQuantity(designName,size,next);
+}
+function updateStockSelectionCard(designName,size){
+  const designKey=String(designName||"").trim().toLowerCase();
+  const card=document.querySelector(`[data-stock-design-key="${CSS.escape(designKey)}"]`);
+  if(!card)return;
+  const key=stockVariantKeyForSite(designName,size);
+  const qty=Math.max(0,Number(stockSelection[key])||0);
+  const rows=card.querySelectorAll('.variant-row');
+  let target=null;
+  rows.forEach(row=>{const label=row.querySelector('.design-size');if(label&&label.textContent.trim().toLowerCase()===('size: '+String(size||'').trim().toLowerCase()))target=row});
+  if(!target)return;
+  const checkbox=target.querySelector('input[type="checkbox"]');
+  const input=target.querySelector('input[type="number"]');
+  if(checkbox)checkbox.checked=qty>0;
+  if(input)input.value=String(qty);
+  card.classList.toggle('selected',Array.from(card.querySelectorAll('input[type="number"]')).some(i=>Number(i.value)>0));
+}
+function selectedStockItems(){
+  const selected=[];
+  designs.forEach(d=>d.variants.forEach(v=>{
+    const quantity=Math.max(0,Math.floor(Number(stockSelection[stockVariantKeyForSite(d.name,v.size)]||0)));
+    if(quantity>0)selected.push({design:d.name,size:v.size,price:Number(v.price)||0,image:d.image||"",quantity,designId:d.id,variantIndex:d.variants.indexOf(v)});
+  }));
+  return selected;
+}
+function updateStockSelectionBar(){
+  const total=selectedStockItems().reduce((sum,item)=>sum+item.quantity,0);
+  const el=document.getElementById('manualSelectionTotal');
+  if(el)el.textContent=String(total);
+}
 /* =========================================================
    PRICE
 ========================================================= */
