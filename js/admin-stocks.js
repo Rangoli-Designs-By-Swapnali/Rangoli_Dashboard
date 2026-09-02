@@ -1,6 +1,6 @@
 /* =========================================================
    ADMIN STOCKS MODULE
-   Design-level stock, preparation queue and stock sorting
+   Design-level stock, preparation queue, add-stock flow and sorting
 ========================================================= */
 let adminStocks=[];
 let stockSavingKeys=new Set();
@@ -12,6 +12,10 @@ function getStockRecord(design){
 }
 function stockDisplayQuantity(record){return Math.max(0,Number(record?.stock)||0)}
 function stockNeedQuantity(record){return Math.max(0,Number(record?.needToPrepare)||0)}
+function stockMinPrice(design){
+  const prices=(design?.variants||[]).map(v=>Number(v.price)).filter(Number.isFinite);
+  return prices.length?Math.min(...prices):0;
+}
 function refreshStocks(){
   apiCall("listStocks",{},result=>{
     if(!result)return;
@@ -28,10 +32,17 @@ function renderStocks(){
 
   const q=(document.getElementById("stockSearch")?.value||"").toLowerCase().trim();
   const sort=document.getElementById("stockSort")?.value||"name";
+  const filter=document.getElementById("stockFilter")?.value||"all";
   const records=designs.map(d=>{
     const r=getStockRecord(d.name);
-    return {design:d.name,image:d.image,variants:d.variants||[],stock:stockDisplayQuantity(r),needToPrepare:stockNeedQuantity(r)};
-  }).filter(x=>!q||x.design.toLowerCase().includes(q));
+    return {design:d.name,image:d.image,variants:d.variants||[],stock:stockDisplayQuantity(r),needToPrepare:stockNeedQuantity(r),minPrice:stockMinPrice(d)};
+  }).filter(x=>{
+    if(q&&!x.design.toLowerCase().includes(q))return false;
+    if(filter==="zero"&&x.stock!==0)return false;
+    if(filter==="available"&&x.stock<=0)return false;
+    if(filter==="need"&&x.needToPrepare<=0)return false;
+    return true;
+  });
 
   const need=records.filter(x=>x.needToPrepare>0).sort((a,b)=>b.needToPrepare-a.needToPrepare||a.design.localeCompare(b.design));
   needBox.innerHTML=need.map(x=>stockNeedCardHTML(x)).join("");
@@ -41,6 +52,8 @@ function renderStocks(){
   const available=records.slice().sort((a,b)=>{
     if(sort==="stockAsc")return a.stock-b.stock||a.design.localeCompare(b.design);
     if(sort==="stockDesc")return b.stock-a.stock||a.design.localeCompare(b.design);
+    if(sort==="priceAsc")return a.minPrice-b.minPrice||a.design.localeCompare(b.design);
+    if(sort==="priceDesc")return b.minPrice-a.minPrice||a.design.localeCompare(b.design);
     return a.design.localeCompare(b.design);
   });
   availableBox.innerHTML=available.map(x=>stockCardHTML(x)).join("");
@@ -61,6 +74,7 @@ function stockCardHTML(x){
     <div class="stock-thumb-wrap"><img class="stock-thumb" data-stock-image="1" data-image-src="${adminEsc(x.image||"")}" alt="${adminEsc(x.design)}"></div>
     <div class="stock-card-name" title="${adminEsc(x.design)}">${adminEsc(x.design)}</div>
     <div class="stock-variants">${variants||"No variants"}</div>
+    <div class="stock-price-sort-note">From ${adminMoney(x.minPrice)}</div>
     <div class="stock-quantity-label">Available Stock</div>
     <div class="stock-quantity-control">
       <button type="button" onclick="changeStockQuantity('${adminEsc(x.design)}',-1,event)">−</button>

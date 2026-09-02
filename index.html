@@ -196,8 +196,8 @@
 
 <div class="manual-selection-bar" id="manualSelectionBar">
   <div class="manual-selection-inner">
-    <button type="button" class="manual-selection-btn" onclick="cancelManualItemSelection()">← Cancel</button>
-    <button type="button" class="manual-selection-btn primary" onclick="confirmManualItemSelection()">✓ Add Items <span id="manualSelectionTotal">₹0</span></button>
+    <button type="button" id="selectionCancelBtn" class="manual-selection-btn" onclick="cancelManualItemSelection()">← Cancel</button>
+    <button type="button" id="selectionConfirmBtn" class="manual-selection-btn primary" onclick="confirmManualItemSelection()">✓ Add Items <span id="manualSelectionTotal">₹0</span></button>
   </div>
 </div>
 
@@ -377,8 +377,7 @@
 
     <section class="admin-panel" id="admin-stocks">
       <div class="admin-card stock-page-card">
-        <h3>Available Stocks</h3>
-        <p class="admin-mini">Stock is maintained per design. All sizes and prices are shown from designs.json.</p>
+        <div class="stock-page-heading"><div><h3>Available Stocks</h3><p class="admin-mini">Stock is maintained per design. All sizes and prices are shown from designs.json.</p></div><button class="admin-btn primary" onclick="startAddStock()">+ Add Stock</button></div>
 
         <div class="stock-toolbar">
           <input id="stockSearch" placeholder="Search design..." oninput="renderStocks()">
@@ -386,6 +385,14 @@
             <option value="name">Sort: Design name</option>
             <option value="stockAsc">Stock: Low to High</option>
             <option value="stockDesc">Stock: High to Low</option>
+            <option value="priceAsc">Price: Low to High</option>
+            <option value="priceDesc">Price: High to Low</option>
+          </select>
+          <select id="stockFilter" onchange="renderStocks()">
+            <option value="all">Filter: All designs</option>
+            <option value="available">In Stock</option>
+            <option value="zero">Out of Stock</option>
+            <option value="need">Need to Prepare</option>
           </select>
           <button class="admin-btn" onclick="refreshStocks()">↻ Refresh</button>
         </div>

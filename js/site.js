@@ -10,6 +10,8 @@ let designs = [];
 
 const cart = {};
 let pendingCustomerOrderMode="";
+let stockSelectionMode=false;
+let stockSelection={};
 function fitViewport(){document.documentElement.style.setProperty("--vh",(window.innerHeight*0.01)+"px");}
 window.addEventListener("resize",fitViewport,{passive:true});
 window.addEventListener("orientationchange",fitViewport,{passive:true});
@@ -323,256 +325,114 @@ function setupImageFallback(
 
 function renderDesigns() {
 
-  const grid =
-    document.getElementById(
-      "designGrid"
-    );
-
-
-  grid.innerHTML = "";
-
-
-  designs.forEach(
-    design => {
-
-      const card =
-        document.createElement(
-          "div"
-        );
-
-
-      card.className =
-        "design-card";
-
-
-      card.id =
-        `card-${design.id}`;
-
-
-      /* IMAGE */
-
-      const imageWrapper =
-        document.createElement(
-          "div"
-        );
-
-
-      imageWrapper.className =
-        "design-image-wrapper";
-
-
-      const image =
-        document.createElement(
-          "img"
-        );
-
-
-      image.className =
-        "design-image";
-
-
-      image.alt =
-        design.name;
-
-
-      image.loading =
-        "lazy";
-
-
-      imageWrapper.appendChild(
-        image
-      );
-
-
-      setupImageFallback(
-        image,
-        design.image
-      );
-
-
-      card.appendChild(
-        imageWrapper
-      );
-
-
-      /* DESIGN TITLE */
-
-      const title =
-        document.createElement(
-          "div"
-        );
-
-
-      title.className =
-        "design-title";
-
-
-      title.textContent =
-        design.name;
-
-
-      card.appendChild(
-        title
-      );
-
-
-      /* VARIANTS */
-
-      const bottom =
-        document.createElement(
-          "div"
-        );
-
-
-      bottom.className =
-        "design-bottom";
-
-
-      design.variants.forEach(
-        (
-          variant,
-          variantIndex
-        ) => {
-
-          const row =
-            document.createElement(
-              "div"
-            );
-
-
-          row.className =
-            "variant-row";
-
-
-          /*
-             VARIANT LAYOUT:
-
-             TOP:
-             Size | Price
-
-             BOTTOM:
-             Checkbox | Quantity
-          */
-
-          row.innerHTML = `
-
-            <label
-              class="select-label"
-              title="Select design"
-            >
-              <input
-                type="checkbox"
-                data-design-id="${design.id}"
-                data-variant-index="${variantIndex}"
-                onchange="
-                  toggleVariant(
-                    ${design.id},
-                    ${variantIndex},
-                    this.checked
-                  )
-                "
-              >
-            </label>
-
-            <span
-              class="design-size"
-            >
-
-              Size:
-              ${escapeHtml(
-                variant.size
-              )}
-
-            </span>
-
-
-            <span
-              class="design-price"
-            >
-
-              ₹${formatPrice(
-                variant.price
-              )}
-
-            </span>
-
-
-            <div
-              class="quantity-controls"
-              >
-
-
-                <button
-                  type="button"
-                  class="quantity-btn"
-
-                  onclick="
-                    changeQuantity(
-                      ${design.id},
-                      ${variantIndex},
-                      -1
-                    )
-                  "
-                >
-
-                  −
-
-                </button>
-
-
-                <span
-                  class="quantity-value"
-                  id="qty-${design.id}-${variantIndex}"
-                >
-
-                  0
-
-                </span>
-
-
-                <button
-                  type="button"
-                  class="quantity-btn"
-
-                  onclick="
-                    changeQuantity(
-                      ${design.id},
-                      ${variantIndex},
-                      1
-                    )
-                  "
-                >
-
-                  +
-
-                </button>
-
-
-              </div>
-
-          `;
-
-
-          bottom.appendChild(
-            row
-          );
-
-        }
-      );
-
-
-      card.appendChild(
-        bottom
-      );
-
-
-      grid.appendChild(
-        card
-      );
-
+  const grid=document.getElementById("designGrid");
+  if(!grid)return;
+  grid.innerHTML="";
+
+  designs.forEach(design=>{
+    const card=document.createElement("div");
+    card.className="design-card";
+    card.id=`card-${design.id}`;
+
+    const imageWrapper=document.createElement("div");
+    imageWrapper.className="design-image-wrapper";
+    const image=document.createElement("img");
+    image.className="design-image";
+    image.alt=design.name;
+    image.loading="lazy";
+    imageWrapper.appendChild(image);
+    setupImageFallback(image,design.image);
+    card.appendChild(imageWrapper);
+
+    const title=document.createElement("div");
+    title.className="design-title";
+    title.textContent=design.name;
+    card.appendChild(title);
+
+    const bottom=document.createElement("div");
+    bottom.className="design-bottom";
+
+    if(stockSelectionMode){
+      const variants=document.createElement("div");
+      variants.className="stock-select-variants";
+      variants.innerHTML=design.variants.map(v=>`<span>${escapeHtml(v.size)} — ₹${formatPrice(v.price)}</span>`).join("");
+      bottom.appendChild(variants);
+
+      const panel=document.createElement("div");
+      panel.className="stock-select-panel";
+      const selected=Number(stockSelection[design.id]||0)>0;
+      panel.innerHTML=`
+        <label class="stock-select-check">
+          <input type="checkbox" ${selected?"checked":""} onchange="toggleStockDesign(${design.id},this.checked)">
+          <span>Add to stock</span>
+        </label>
+        <div class="stock-select-quantity">
+          <button type="button" onclick="changeStockSelectionQuantity(${design.id},-1,event)">−</button>
+          <input id="stock-select-qty-${design.id}" type="number" min="0" step="1" value="${Number(stockSelection[design.id]||0)}" onchange="setStockSelectionQuantity(${design.id},this.value)">
+          <button type="button" onclick="changeStockSelectionQuantity(${design.id},1,event)">+</button>
+        </div>`;
+      bottom.appendChild(panel);
+      card.classList.toggle("selected",selected);
+    }else{
+      design.variants.forEach((variant,variantIndex)=>{
+        const row=document.createElement("div");
+        row.className="variant-row";
+        row.innerHTML=`
+          <label class="select-label" title="Select design">
+            <input type="checkbox" data-design-id="${design.id}" data-variant-index="${variantIndex}" onchange="toggleVariant(${design.id},${variantIndex},this.checked)">
+          </label>
+          <span class="design-size">Size: ${escapeHtml(variant.size)}</span>
+          <span class="design-price">₹${formatPrice(variant.price)}</span>
+          <div class="quantity-controls">
+            <button type="button" class="quantity-btn" onclick="changeQuantity(${design.id},${variantIndex},-1)">−</button>
+            <span class="quantity-value" id="qty-${design.id}-${variantIndex}">0</span>
+            <button type="button" class="quantity-btn" onclick="changeQuantity(${design.id},${variantIndex},1)">+</button>
+          </div>`;
+        bottom.appendChild(row);
+      });
     }
-  );
 
+    card.appendChild(bottom);
+    grid.appendChild(card);
+  });
+}
+
+function toggleStockDesign(designId,selected){
+  if(selected){
+    if(!(Number(stockSelection[designId])>0))stockSelection[designId]=1;
+  }else delete stockSelection[designId];
+  updateStockSelectionCard(designId);
+  updateStockSelectionBar();
+}
+function setStockSelectionQuantity(designId,value){
+  const quantity=Math.max(0,Math.floor(Number(value)||0));
+  if(quantity<=0)delete stockSelection[designId];
+  else stockSelection[designId]=quantity;
+  updateStockSelectionCard(designId);
+  updateStockSelectionBar();
+}
+function changeStockSelectionQuantity(designId,delta,event){
+  if(event){event.preventDefault();event.stopPropagation()}
+  const next=Math.max(0,(Number(stockSelection[designId])||0)+delta);
+  setStockSelectionQuantity(designId,next);
+}
+function updateStockSelectionCard(designId){
+  const card=document.getElementById(`card-${designId}`);
+  if(!card)return;
+  const selected=Number(stockSelection[designId]||0)>0;
+  card.classList.toggle("selected",selected);
+  const input=document.getElementById(`stock-select-qty-${designId}`);
+  if(input)input.value=String(Number(stockSelection[designId]||0));
+  const checkbox=card.querySelector('.stock-select-check input[type="checkbox"]');
+  if(checkbox)checkbox.checked=selected;
+}
+function updateStockSelectionBar(){
+  const total=Object.values(stockSelection).reduce((a,v)=>a+(Number(v)||0),0);
+  const el=document.getElementById("manualSelectionTotal");
+  if(el)el.textContent=total?`${total} design${total===1?"":"s"}`:"0 designs";
+}
+function selectedStockItems(){
+  return designs.filter(d=>Number(stockSelection[d.id]||0)>0).map(d=>({design:d.name,image:d.image,quantity:Math.max(1,Math.floor(Number(stockSelection[d.id])||0))}));
 }
 
 

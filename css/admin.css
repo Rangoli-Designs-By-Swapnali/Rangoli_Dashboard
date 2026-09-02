@@ -94,10 +94,10 @@ body{font-family:Arial,sans-serif;padding:25px;color:#3d2030}.invoice-box{max-wi
 /* =========================================================
    STOCK PAGE
 ========================================================= */
-.stock-toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.stock-page-heading{display:flex;justify-content:space-between;align-items:center;gap:10px}.stock-page-heading h3{margin-bottom:3px}.stock-page-heading .admin-btn{white-space:nowrap}.stock-toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
 .stock-toolbar input,.stock-toolbar select{padding:8px 10px;border:1px solid #e2ccd6;border-radius:9px;background:#fff;font-size:12px;color:#3d2030}
 .stock-toolbar input{flex:1;min-width:180px}
-.stock-toolbar select{min-width:180px}
+.stock-toolbar select{min-width:180px}.stock-price-sort-note{font-size:7px;color:#9b2d62;font-weight:700;margin-top:2px}
 .stock-section-title{font-size:14px;font-weight:800;color:#5b1738;margin:12px 0 7px;padding-bottom:5px;border-bottom:1px solid #ead8e0}
 .stock-section-title.need-title{color:#a52b2b}
 .stock-grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:7px}
@@ -135,6 +135,7 @@ body{font-family:Arial,sans-serif;padding:25px;color:#3d2030}.invoice-box{max-wi
   .stock-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
 }
 @media(max-width:560px){
+  .stock-page-heading{align-items:flex-start}.stock-page-heading .admin-btn{padding:8px 9px;font-size:11px}
   .stock-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
   .stock-toolbar input,.stock-toolbar select{min-width:100%}
   .invoice-card-line{font-size:9px}
@@ -150,3 +151,11 @@ body{font-family:Arial,sans-serif;padding:25px;color:#3d2030}.invoice-box{max-wi
 .edit-items-heading{display:flex;justify-content:space-between;align-items:center;gap:7px;margin-top:11px}
 .edit-items-heading strong{color:#5b1738}
 .edit-grand-total{justify-content:flex-end;margin-top:10px}
+
+
+/* =========================================================
+   ADD STOCK SELECTION MODE
+========================================================= */
+.stock-select-variants{display:flex;flex-direction:column;gap:3px;margin-top:2px}.stock-select-variants span{font-size:11px;color:#806b74;background:#fff7fa;border:1px solid #eadde2;border-radius:7px;padding:5px 6px}.stock-select-panel{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:8px;padding-top:7px;border-top:1px solid #ead8e0}.stock-select-check{display:flex;align-items:center;gap:5px;color:#6f1d45;font-size:11px;font-weight:800;cursor:pointer}.stock-select-check input{width:17px;height:17px;accent-color:#9b2d62}.stock-select-quantity{display:grid;grid-template-columns:30px 48px 30px;gap:2px}.stock-select-quantity button{height:30px;border:1px solid #ead5df;background:#f7edf2;color:#5b1738;border-radius:6px;font-size:16px;font-weight:800;cursor:pointer}.stock-select-quantity input{width:48px;height:30px;border:1px solid #ead5df;border-radius:6px;text-align:center;font-size:12px;font-weight:800;color:#5b1738}.stock-select-quantity input::-webkit-inner-spin-button{margin:0}
+body.manual-selection-active .stock-select-panel{display:flex}
+@media(max-width:560px){.stock-select-panel{flex-direction:column;align-items:stretch}.stock-select-quantity{grid-template-columns:1fr 1.5fr 1fr}.stock-select-quantity input{width:100%}}
