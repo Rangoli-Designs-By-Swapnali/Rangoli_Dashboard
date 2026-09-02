@@ -60,3 +60,93 @@
 
 
 body{font-family:Arial,sans-serif;padding:25px;color:#3d2030}.invoice-box{max-width:850px;margin:auto}.invoice-head{display:flex;justify-content:space-between;border-bottom:2px solid #9b2d62;padding-bottom:12px}.invoice-brand{font-size:22px;font-weight:800;color:#5b1738}.invoice-meta{text-align:right;font-size:11px;color:#806b74}.invoice-customer{margin:14px 0;font-size:12px}.invoice-lines{width:100%;border-collapse:collapse}.invoice-lines th,.invoice-lines td{padding:8px;border-bottom:1px solid #ddd;text-align:left;font-size:12px}.invoice-item-image{width:46px;height:46px;object-fit:contain}.invoice-total{text-align:right;font-size:18px;font-weight:800;margin-top:12px}
+
+/* =========================================================
+   ORDER PAYMENT / STATUS HIGHLIGHTS
+========================================================= */
+.order-table tr.order-row-pending > td{background:#fff1f1!important}
+.order-table tr.order-row-upcoming > td{background:#fff7e8!important}
+.order-table tr.order-row-paid > td{background:#eefaf0!important}
+.remaining-amount{color:#c62828!important;font-weight:800;font-size:10px}
+
+.upcoming-card.order-row-pending{background:#fff0f0!important;border-color:#e5a7a7!important}
+.upcoming-card.order-row-paid{background:#eefaf0!important;border-color:#a9d6b2!important}
+.upcoming-card.order-row-upcoming{background:#fff7e8!important;border-color:#e4c27a!important}
+
+/* =========================================================
+   COMPACT INVOICE CARDS
+========================================================= */
+.invoice-card{padding:8px 10px!important;min-height:0!important}
+.invoice-card-line{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10px;line-height:1.35;color:#6f1d45}
+.invoice-card-line strong{color:#5b1738;font-size:11px}
+.invoice-card-line + .invoice-card-line{margin-top:5px}
+.invoice-card .status-pill{font-size:8px;padding:3px 6px;white-space:nowrap}
+.invoice-card.order-row-pending{background:#fff0f0!important;border-color:#e5a7a7!important}
+.invoice-card.order-row-paid{background:#eefaf0!important;border-color:#a9d6b2!important}
+.invoice-card.order-row-upcoming{background:#fff7e8!important;border-color:#e4c27a!important}
+.invoice-card-due{margin-top:4px;color:#c62828;font-size:9px;font-weight:800}
+
+/* Invoice totals use the same size as the Order Invoice heading. */
+.invoice-title-label{font-size:14px!important;font-weight:800!important;color:#5b1738!important}
+.invoice-total{font-size:14px!important;line-height:1.55!important}
+.invoice-total .grand{font-size:14px!important}
+
+/* =========================================================
+   STOCK PAGE
+========================================================= */
+.stock-toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.stock-toolbar input,.stock-toolbar select{padding:8px 10px;border:1px solid #e2ccd6;border-radius:9px;background:#fff;font-size:12px;color:#3d2030}
+.stock-toolbar input{flex:1;min-width:180px}
+.stock-toolbar select{min-width:180px}
+.stock-section-title{font-size:14px;font-weight:800;color:#5b1738;margin:12px 0 7px;padding-bottom:5px;border-bottom:1px solid #ead8e0}
+.stock-section-title.need-title{color:#a52b2b}
+.stock-grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:7px}
+.stock-need-grid{margin-bottom:8px}
+.stock-need-card,.stock-card{min-width:0;background:#fff;border:1px solid #ead8e0;border-radius:10px;padding:6px;text-align:center;box-shadow:0 4px 12px rgba(91,23,56,.06)}
+.stock-need-card{background:#fff4f4;border-color:#edc8c8}
+.stock-thumb-wrap{width:100%;aspect-ratio:1/1;background:#f7f2f4;border:1px solid #ead8e0;border-radius:7px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.stock-thumb{width:100%;height:100%;object-fit:contain;display:block}
+.stock-card-name{font-size:9px;font-weight:800;color:#5b1738;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stock-variants{font-size:7.5px;line-height:1.35;color:#806b74;min-height:30px;margin-top:4px}
+.stock-quantity-label{font-size:7px;color:#806b74;margin-top:4px}
+.stock-quantity-control{display:grid;grid-template-columns:25px minmax(0,1fr) 25px;gap:2px;margin-top:3px}
+.stock-quantity-control button{height:27px;border:1px solid #ead5df;background:#f7edf2;color:#5b1738;border-radius:6px;font-size:16px;font-weight:800;cursor:pointer;padding:0}
+.stock-quantity-control input{width:100%;height:27px;border:1px solid #ead5df;border-radius:6px;text-align:center;font-size:11px;font-weight:800;color:#5b1738;background:#fff}
+.stock-card-need{margin-top:4px;font-size:7.5px;color:#c62828;font-weight:800}
+.stock-need-number{margin-top:5px;font-size:10px;color:#a52b2b;font-weight:800}
+.stock-empty{text-align:center;padding:13px;color:#8d7880;font-size:11px;background:#fff;border:1px dashed #ead8e0;border-radius:9px}
+
+/* =========================================================
+   SMALL ADMIN FORM CLEANUP
+========================================================= */
+.center-text{text-align:center}
+.customer-details-box{max-width:480px!important;text-align:left!important}
+.customer-form-grid{margin-top:10px}
+.customer-address{min-height:75px}
+.manual-action-row{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;align-items:center}
+.manual-action-row .manual-total-strip{margin-left:auto;padding:7px 10px;border-radius:9px;background:#fff5f8;border:1px solid #ead8e0}
+.settings-actions{margin-top:9px}
+.settings-note{margin-top:9px}
+
+@media(max-width:1100px){
+  .stock-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+@media(max-width:800px){
+  .stock-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  .stock-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .stock-toolbar input,.stock-toolbar select{min-width:100%}
+  .invoice-card-line{font-size:9px}
+}
+@media(max-width:360px){
+  .stock-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+.manual-stock-warning{color:#a52b2b!important}
+.section-help{margin-bottom:7px}
+.orders-table-area{margin-top:10px}
+.advance-summary{margin-top:5px}
+.invoice-layout-spaced{margin-top:10px}
+.edit-items-heading{display:flex;justify-content:space-between;align-items:center;gap:7px;margin-top:11px}
+.edit-items-heading strong{color:#5b1738}
+.edit-grand-total{justify-content:flex-end;margin-top:10px}

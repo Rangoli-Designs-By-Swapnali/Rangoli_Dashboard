@@ -9,6 +9,7 @@ const ADMIN_API_URL = "https://script.google.com/macros/s/AKfycbxf_MeOG9cfDho7xN
 const ADMIN_API_KEY = "ee0257ba72c1487e9c0ed77a0deeeb20";
 
 let adminOrders = [];
+let adminStocks = [];
 let adminSettings = {businessName:"Swapnali's Rangoli",footer:"Thank you for your order! 🌸"};
 let newOrderItems = [];
 let manualSelectionSavedCart = null;
@@ -65,6 +66,18 @@ function adminDate(iso){
   if(!iso)return "—";
   try{return new Date(iso).toLocaleString("en-IN",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})}catch(e){return iso}
 }
+function orderRemaining(o){
+  if(!o)return 0;
+  if(String(o.payment||"")==="Paid")return 0;
+  return Math.max(0,Number(o.total||0)-Number(o.advanceAmount||0));
+}
+function orderVisualClass(o){
+  if(!o)return "";
+  if(String(o.payment||"")!=="Paid" && orderRemaining(o)>0)return "order-row-pending";
+  if(String(o.status||"")==="Delivered" && String(o.payment||"")==="Paid")return "order-row-paid";
+  if(!["Delivered","Cancelled"].includes(String(o.status||"")))return "order-row-upcoming";
+  return "";
+}
 function makeOrderNo(){return ""}
 
 function apiCall(action, params={}, callback){
@@ -106,7 +119,7 @@ function getAdminTabFromHash(){
 }
 
 function setAdminTabHash(tab){
-  const safeTabs=["dashboard","orders","neworder","invoice","settings"];
+  const safeTabs=["dashboard","orders","stocks","neworder","invoice","settings"];
   const safe=safeTabs.includes(tab) ? tab : "dashboard";
   const target=safe==="dashboard" ? "#admin" : "#admin/"+safe;
   if(location.hash!==target){
@@ -131,7 +144,7 @@ function closeAdmin(){
 }
 
 function adminTab(tab,syncUrl=true){
-  const safeTabs=["dashboard","orders","neworder","invoice","settings"];
+  const safeTabs=["dashboard","orders","stocks","neworder","invoice","settings"];
   if(!safeTabs.includes(tab)) tab="dashboard";
 
   document.querySelectorAll(".admin-panel").forEach(x=>x.classList.remove("active"));
@@ -142,6 +155,7 @@ function adminTab(tab,syncUrl=true){
 
   if(tab==="dashboard")renderAdminDashboard();
   if(tab==="orders"){populateMonthFilters();renderOrdersTable()}
+  if(tab==="stocks"){refreshStocks()}
   if(tab==="neworder"){
     if(document.getElementById("newOrderDate")&&!document.getElementById("newOrderDate").value)
       document.getElementById("newOrderDate").value=localDateKey(new Date());
@@ -152,7 +166,7 @@ function adminTab(tab,syncUrl=true){
 }
 function refreshAdmin(){
   if(adminLoading)return; adminLoading=true;
-  apiCall("listOrders",{},result=>{adminLoading=false;if(result){adminOrders=Array.isArray(result.orders)?result.orders:[];adminSettings=result.settings||adminSettings;populateMonthFilters();populateDashboardPeriod();renderAdminDashboard();renderOrdersTable();populateInvoiceSelect();renderInvoiceCards();loadAdminSettingsForm();}});
+  apiCall("listOrders",{},result=>{adminLoading=false;if(result){adminOrders=Array.isArray(result.orders)?result.orders:[];adminSettings=result.settings||adminSettings;adminStocks=Array.isArray(result.stocks)?result.stocks:adminStocks;populateMonthFilters();populateDashboardPeriod();renderAdminDashboard();renderOrdersTable();populateInvoiceSelect();renderInvoiceCards();loadAdminSettingsForm();}});
 }
 function getMonthKeys(){const set=new Set();adminOrders.forEach(o=>{const k=orderDateKey(o);if(k)set.add(k.slice(0,7))});if(!set.size)set.add(localDateKey(new Date()).slice(0,7));return Array.from(set).sort().reverse()}
 function getYearKeys(){const set=new Set();adminOrders.forEach(o=>{const k=orderDateKey(o);if(k)set.add(k.slice(0,4))});set.add(String(new Date().getFullYear()));return Array.from(set).sort().reverse()}
@@ -180,5 +194,13 @@ function renderAdminDashboard(){
 }
 function openStatusInvoices(status){const list=adminOrders.filter(o=>o.status===status);if(!list.length)return;selectedInvoiceOrderId="";adminTab("invoice");setTimeout(()=>{const pm=document.getElementById("invoicePaymentFilter");if(pm)pm.value="";const sel=document.getElementById("invoiceOrderSelect");if(sel)sel.value="";const box=document.getElementById("invoicePreview");if(box)box.innerHTML="<div class='empty-admin'>Select an invoice card to view invoice details.</div>";renderInvoiceCards(list);},0)}
 function openTopDesignInvoice(design,size){const o=dashboardScopedOrders().find(o=>o.status!=="Cancelled"&&(o.items||[]).some(i=>i.design===design&&i.size===size));if(o)viewInvoice(o.id);else alert("No invoice found for this design in the selected period.")}
-function renderUpcomingOrders(list){if(!list.length)return "<div class='empty-admin'>No upcoming orders.</div>";return `<div class="upcoming-grid">${list.map(o=>{const dk=orderDateKey(o),thumbs=(o.items||[]).slice(0,4).map(i=>i.image?`<img src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"").join(""),more=(o.items||[]).length>4?`<span class="upcoming-more">+${o.items.length-4}</span>`:"";return `<div class="upcoming-card status-${adminEsc(o.status)}" onclick="viewInvoice('${adminEsc(o.id)}')"><div class="upcoming-head"><div><div class="upcoming-order-no">${adminEsc(o.orderNo)}</div><div class="upcoming-customer">${adminEsc(o.customerName||'Walk-in')}</div><div class="order-payment">Payment: ${adminEsc(o.payment||'Pending')}</div></div><span class="status-pill status-${adminEsc(o.status)}">${adminEsc(o.status)}</span></div><div class="upcoming-thumbs">${thumbs}${more}</div><div class="upcoming-date">Dispatch: ${adminEsc(dispatchRange(dk))}</div><div class="upcoming-total">${adminMoney(o.total)}</div></div>`}).join("")}</div>`}
+function renderUpcomingOrders(list){
+  if(!list.length)return "<div class='empty-admin'>No upcoming orders.</div>";
+  return `<div class="upcoming-grid">${list.map(o=>{
+    const dk=orderDateKey(o),due=orderRemaining(o),visual=orderVisualClass(o);
+    const thumbs=(o.items||[]).slice(0,4).map(i=>i.image?`<img src="${adminEsc(resolveImageUrl(i.image))}" alt="">`:"").join("");
+    const more=(o.items||[]).length>4?`<span class="upcoming-more">+${o.items.length-4}</span>`:"";
+    return `<div class="upcoming-card status-${adminEsc(o.status)} ${visual}" onclick="viewInvoice('${adminEsc(o.id)}')"><div class="upcoming-head"><div><div class="upcoming-order-no">${adminEsc(o.orderNo)}</div><div class="upcoming-customer">${adminEsc(o.customerName||'Walk-in')}</div><div class="order-payment">Payment: ${adminEsc(o.payment||'Pending')}</div>${due>0?`<div class="remaining-amount">Remaining: ${adminMoney(due)}</div>`:""}</div><span class="status-pill status-${adminEsc(o.status)}">${adminEsc(o.status)}</span></div><div class="upcoming-thumbs">${thumbs}${more}</div><div class="upcoming-date">Dispatch: ${adminEsc(dispatchRange(dk))}</div><div class="upcoming-total">${adminMoney(o.total)}</div></div>`
+  }).join("")}</div>`
+}
 function filterByMonth(list,key){if(!key)return list.slice();return list.filter(o=>orderDateKey(o).slice(0,7)===key)}

@@ -3,7 +3,7 @@
    Manual order creation + payment/advance calculations
 ========================================================= */
 function renderNewOrderItems(){
-  if(document.getElementById("newPayment")?.value==="Advanced Received") syncNewAdvanceFromPercent();
+  if(["Advanced Received","Partially Paid"].includes(document.getElementById("newPayment")?.value)) syncNewAdvanceFromAmount();
   const box=document.getElementById("newOrderItems");
   if(!newOrderItems.length){
     box.innerHTML="<div class='empty-admin'>No items yet. Click Add Item to choose designs from the shopping page.</div>";
@@ -31,7 +31,7 @@ function updateManualOrderTotal(){
   if(el)el.textContent=adminMoney(manualOrderItemsTotal());
   const summary=document.getElementById("newAdvanceSummary");
   const payment=document.getElementById("newPayment")?.value;
-  if(payment==="Advanced Received") syncNewAdvanceFromPercent();
+  if(payment!=="Paid") syncNewAdvanceFromAmount();
 }
 function syncNewOrderTotals(){
   updateManualOrderTotal();
@@ -39,43 +39,51 @@ function syncNewOrderTotals(){
 function handleNewPaymentChange(){
   const v=document.getElementById("newPayment")?.value,b=document.getElementById("newAdvancePaymentFields");
   if(!b)return;
-  b.style.display=v==="Advanced Received"?"":"none";
-  if(v==="Advanced Received") syncNewAdvanceFromPercent();
+  const show=v!=="Paid";
+  b.style.display=show?"":"none";
+  if(show)syncNewAdvanceFromAmount();
   else{
-    document.getElementById("newAdvancePercent").value="";
     document.getElementById("newAdvanceAmount").value="";
     document.getElementById("newAdvanceSummary").textContent="";
   }
   updateManualOrderTotal();
 }
-function syncNewAdvanceFromPercent(){
-  const t=manualOrderItemsTotal();
-  const p=Math.min(100,Math.max(0,Number(document.getElementById("newAdvancePercent").value)||0));
-  const a=t*p/100;
-  document.getElementById("newAdvanceAmount").value=t?a.toFixed(2):"";
-  document.getElementById("newAdvanceSummary").textContent=t?`Order total: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance.";
-  const el=document.getElementById("newOrderTotalValue");
-  if(el)el.textContent=adminMoney(t);
-}
 function syncNewAdvanceFromAmount(){
   const t=manualOrderItemsTotal();
-  const a=Math.min(t,Math.max(0,Number(document.getElementById("newAdvanceAmount").value)||0));
+  let a=Math.max(0,Number(document.getElementById("newAdvanceAmount").value)||0);
+  if(a>t)a=t;
   document.getElementById("newAdvanceAmount").value=a?a.toFixed(2):"";
-  document.getElementById("newAdvancePercent").value=t?((a/t)*100).toFixed(2):"";
-  document.getElementById("newAdvanceSummary").textContent=t?`Order total: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance.";
+  document.getElementById("newAdvanceSummary").textContent=t?`Order total: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(Math.max(0,t-a))}`:"Add items to calculate the amount.";
 }
 function validateNewAdvancePayment(){
-  if(document.getElementById("newPayment").value!=="Advanced Received")return true;
-  const t=manualOrderItemsTotal(),p=Number(document.getElementById("newAdvancePercent").value),a=Number(document.getElementById("newAdvanceAmount").value);
-  if(!t){alert("Add at least one item before entering advance payment.");return false}
-  if(!Number.isFinite(p)||p<0||p>100||!Number.isFinite(a)||a<0||a>t+0.01){alert("Enter a valid advance percentage and amount. Advance cannot exceed the order total.");return false}
-  if(Math.abs((t*p/100)-a)>0.02){alert("Advance percentage and amount do not match.");return false}
+  const payment=document.getElementById("newPayment").value;
+  if(payment==="Paid")return true;
+  const t=manualOrderItemsTotal(),a=Number(document.getElementById("newAdvanceAmount").value);
+  if(!t){alert("Add at least one item before entering advance received amount.");return false}
+  if(!Number.isFinite(a)||a<0||a>t+0.01){alert("Enter a valid advance received amount. It cannot exceed the order total.");return false}
   return true;
 }
 function editOrderItemsTotal(){const s=Number(document.getElementById("editShipping")?.value)||0;const d=Number(document.getElementById("editDiscount")?.value)||0;return Math.max(0,editOrderItemsDraft.reduce((a,i)=>a+Number(i.price||0)*Number(i.quantity||0),0)+s-d)}
-function handleEditPaymentChange(){const v=document.getElementById("editPayment")?.value,b=document.getElementById("editAdvancePaymentFields");if(!b)return;b.style.display=v==="Advanced Received"?"":"none";if(v==="Advanced Received")syncEditAdvanceFromPercent()}
-function syncEditAdvanceFromPercent(){const t=editOrderItemsTotal(),p=Math.min(100,Math.max(0,Number(document.getElementById("editAdvancePercent").value)||0)),a=t*p/100;document.getElementById("editAdvanceAmount").value=t?a.toFixed(2):"";document.getElementById("editAdvanceSummary").textContent=t?`Order total: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance."}
-function syncEditAdvanceFromAmount(){const t=editOrderItemsTotal(),a=Math.min(t,Math.max(0,Number(document.getElementById("editAdvanceAmount").value)||0));document.getElementById("editAdvanceAmount").value=a?a.toFixed(2):"";document.getElementById("editAdvancePercent").value=t?((a/t)*100).toFixed(2):"";document.getElementById("editAdvanceSummary").textContent=t?`Order total: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(t-a)}`:"Add items to calculate the advance."}
+function handleEditPaymentChange(){const v=document.getElementById("editPayment")?.value,b=document.getElementById("editAdvancePaymentFields");if(!b)return;const show=v!=="Paid";b.style.display=show?"":"none";if(show)syncEditAdvanceFromAmount();else{document.getElementById("editAdvanceAmount").value="";document.getElementById("editAdvanceSummary").textContent=""}}
+function syncEditAdvanceFromAmount(){
+  const t=editOrderItemsTotal();
+  let a=Math.max(0,Number(document.getElementById("editAdvanceAmount").value)||0);
+  if(a>t)a=t;
+  document.getElementById("editAdvanceAmount").value=a?a.toFixed(2):"";
+  document.getElementById("editAdvanceSummary").textContent=t?`Order total: ${adminMoney(t)} • Advance received: ${adminMoney(a)} • Remaining: ${adminMoney(Math.max(0,t-a))}`:"Add items to calculate the amount.";
+}
+function clearNewOrder(){
+  newOrderItems=[];
+  ["newCustomerName","newCustomerPhone","newCustomerAddress","newNotes","newAdvanceAmount"].forEach(id=>{const el=document.getElementById(id);if(el)el.value=""});
+  const d=document.getElementById("newOrderDate");if(d)d.value=localDateKey(new Date());
+  const shipping=document.getElementById("newShipping");if(shipping)shipping.value="0";
+  const discount=document.getElementById("newDiscount");if(discount)discount.value="0";
+  const payment=document.getElementById("newPayment");if(payment)payment.value="Pending";
+  const status=document.getElementById("newStatus");if(status)status.value="New";
+  const box=document.getElementById("newAdvancePaymentFields");if(box)box.style.display="none";
+  const summary=document.getElementById("newAdvanceSummary");if(summary)summary.textContent="";
+  renderNewOrderItems();
+}
 function saveNewOrder(){
   if(!validateNewAdvancePayment()) return;
   if(!newOrderItems.length){alert("Add at least one item.");return}
@@ -88,8 +96,8 @@ function saveNewOrder(){
   const subtotal=valid.reduce((a,i)=>a+Number(i.price)*Number(i.quantity),0);
   const total=Math.max(0,subtotal+shipping-discount);
   const payment=document.getElementById("newPayment").value;
-  const advancePercent=payment==="Advanced Received"?(Number(document.getElementById("newAdvancePercent").value)||0):0;
-  const advanceAmount=payment==="Advanced Received"?(Number(document.getElementById("newAdvanceAmount").value)||0):0;
+  const advanceAmount=payment!=="Paid"?(Number(document.getElementById("newAdvanceAmount").value)||0):0;
+  const advancePercent=total?Math.min(100,(advanceAmount/total)*100):0;
 
   const order={
     id:"o_"+Date.now()+Math.random().toString(36).slice(2,7),
@@ -120,6 +128,7 @@ function saveNewOrder(){
     adminTab("neworder");
 
     const msg=document.getElementById("manualSaveMessage");
-    if(msg){msg.innerHTML=`✓ Order <strong>${adminEsc(no)}</strong> saved successfully.`+`<small>Ready for the next new order.</small>`;msg.classList.add("show");setTimeout(()=>msg.classList.remove("show"),6000)}
+    const shortageText=(result.stockShortages||[]).map(x=>`${adminEsc(x.design)}: ${Number(x.quantity)||0}`).join(", ");
+    if(msg){msg.innerHTML=`✓ Order <strong>${adminEsc(no)}</strong> saved successfully.`+(shortageText?`<small class="manual-stock-warning">Stock preparation required: ${shortageText}</small>`:`<small>Stock reserved successfully.</small>`);msg.classList.add("show");setTimeout(()=>msg.classList.remove("show"),8000)}
   });
 }

@@ -1313,7 +1313,8 @@ function confirmCustomerDetails(){
     designs.forEach(d=>d.variants.forEach((v,vi)=>updateVariantUI(d.id,vi)));
     designs.forEach(d=>updateCardSelection(d.id));
     updateCart();hideCartModal();pendingCustomerOrderMode="";
-    alert(`Order ${saved?.orderNo||"R-?"} has been recorded in Google Sheets.`);
+    const shortageText=(result.stockShortages||[]).map(x=>`${x.design}: ${x.quantity}`).join(", ");
+    alert(`Order ${saved?.orderNo||"R-?"} has been recorded in Google Sheets.`+(shortageText?`\n\nStock preparation required: ${shortageText}`:""));
   });
 }
 
