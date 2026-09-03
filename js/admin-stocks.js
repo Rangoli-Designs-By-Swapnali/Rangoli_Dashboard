@@ -2,7 +2,7 @@
    ADMIN STOCKS MODULE
    Variant-level stock, preparation queue, natural design order
 ========================================================= */
-let adminStocks=[];
+// adminStocks is declared globally in admin-core.js and shared by this module.
 const stockSavingKeys=new Set();
 const stockPendingValues={};
 
