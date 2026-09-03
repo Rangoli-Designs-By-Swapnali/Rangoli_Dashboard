@@ -98,7 +98,17 @@ function apiCall(action, params={}, callback){
   document.head.appendChild(script);
 }
 
+function adminPinTodayKey(){
+  return "swapnali_admin_pin_date_"+localDateKey(new Date());
+}
+function hasAdminAccessToday(){
+  try{return localStorage.getItem("swapnali_admin_pin_date")===localDateKey(new Date())}catch(e){return false}
+}
+function rememberAdminAccessToday(){
+  try{localStorage.setItem("swapnali_admin_pin_date",localDateKey(new Date()))}catch(e){}
+}
 function requestAdminAccess(){
+  if(hasAdminAccessToday()){openAdmin();return}
   document.getElementById("adminPinInput").value="";
   document.getElementById("pinModal").classList.add("show");
   setTimeout(()=>document.getElementById("adminPinInput").focus(),80);
@@ -108,7 +118,7 @@ function checkAdminPin(){
   const pin=document.getElementById("adminPinInput").value.trim();
   if(!pin){alert("Enter your admin PIN.");return}
   apiCall("verifyPin",{pin},result=>{
-    if(result&&result.valid){hidePinModal();openAdmin()}else alert("Incorrect admin PIN.");
+    if(result&&result.valid){rememberAdminAccessToday();hidePinModal();openAdmin()}else alert("Incorrect admin PIN.");
   });
 }
 function getAdminTabFromHash(){
@@ -152,6 +162,9 @@ function adminTab(tab,syncUrl=true){
   const p=document.getElementById("admin-"+tab);if(p)p.classList.add("active");
 
   if(syncUrl)setAdminTabHash(tab);
+
+  const addStockBtn=document.getElementById("adminAddStockBtn");
+  if(addStockBtn)addStockBtn.style.display=tab==="stocks"?"inline-flex":"none";
 
   if(tab==="dashboard")renderAdminDashboard();
   if(tab==="orders"){populateMonthFilters();renderOrdersTable()}

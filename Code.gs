@@ -46,7 +46,11 @@ function setup() {
 
   migrateOrdersSheet_(orders, orderHeaders);
 
-  ensureStockSchema_(stock);
+  if (stock.getLastRow() === 0) {
+    stock.getRange(1,1,1,6).setValues([['Design','Size','Image','Stock','NeedToPrepare','UpdatedAt']]);
+    stock.getRange(1,1,1,6).setFontWeight('bold');
+    stock.setFrozenRows(1);
+  }
 
   if (settings.getLastRow() === 0) {
     settings.getRange(1,1,1,2).setValues([['Key','Value']]);
@@ -559,183 +563,111 @@ function setSettingRow_(sheet, key, value) {
 }
 
 
-function ensureStockSchema_(sheet){
-  const headers=['Design','Size','Image','Stock','NeedToPrepare','UpdatedAt'];
-  const lastCol=Math.max(sheet.getLastColumn(),1);
-  const firstRow=sheet.getLastRow()>0?sheet.getRange(1,1,1,lastCol).getValues()[0]:[];
-  const isNew=String(firstRow[0]||'').trim()==='Design' && String(firstRow[1]||'').trim()==='Size' && String(firstRow[2]||'').trim()==='Image';
-  if(isNew){
-    sheet.getRange(1,1,1,6).setValues([headers]);
-    sheet.getRange(1,1,1,6).setFontWeight('bold');
-    sheet.setFrozenRows(1);
-    return;
-  }
-  const isLegacy=String(firstRow[0]||'').trim()==='Design' && String(firstRow[1]||'').trim()==='Image' && String(firstRow[2]||'').trim()==='Stock';
-  if(isLegacy){
-    const lastRow=sheet.getLastRow();
-    const rows=lastRow>=2?sheet.getRange(2,1,lastRow-1,5).getValues():[];
-    const converted=rows.map(r=>[String(r[0]||''),String(''),String(r[1]||''),Number(r[2]||0),Number(r[3]||0),r[4]||'']);
-    sheet.clearContents();
-    sheet.getRange(1,1,1,6).setValues([headers]);
-    if(converted.length)sheet.getRange(2,1,converted.length,6).setValues(converted);
-    sheet.getRange(1,1,1,6).setFontWeight('bold');
-    sheet.setFrozenRows(1);
-    return;
-  }
-  if(sheet.getLastRow()===0){
-    sheet.getRange(1,1,1,6).setValues([headers]);
-    sheet.getRange(1,1,1,6).setFontWeight('bold');
-    sheet.setFrozenRows(1);
-  }
-}
-
 function getStockSheet_(){
   const ss=SpreadsheetApp.getActiveSpreadsheet();
   let sheet=ss.getSheetByName(STOCK_SHEET);
   if(!sheet){ setup(); sheet=ss.getSheetByName(STOCK_SHEET); }
   if(!sheet)throw new Error('Stock sheet could not be created.');
-  ensureStockSchema_(sheet);
+  if(sheet.getLastRow()===0){
+    sheet.getRange(1,1,1,6).setValues([['Design','Size','Image','Stock','NeedToPrepare','UpdatedAt']]);
+    sheet.getRange(1,1,1,6).setFontWeight('bold'); sheet.setFrozenRows(1);
+  }else{
+    const headers=sheet.getRange(1,1,1,Math.max(6,sheet.getLastColumn())).getValues()[0].map(String);
+    if(headers[0]==='Design' && headers[1]==='Image' && headers[2]==='Stock'){
+      sheet.insertColumnBefore(2);
+      sheet.getRange(1,1,1,6).setValues([['Design','Size','Image','Stock','NeedToPrepare','UpdatedAt']]);
+      sheet.getRange(1,1,1,6).setFontWeight('bold');
+    }else if(headers[0]!=='Design' || headers[1]!=='Size'){
+      sheet.getRange(1,1,1,6).setValues([['Design','Size','Image','Stock','NeedToPrepare','UpdatedAt']]);
+      sheet.getRange(1,1,1,6).setFontWeight('bold');
+    }
+    sheet.setFrozenRows(1);
+  }
   return sheet;
 }
-
 function listStocks_(){
-  const sheet=getStockSheet_();
-  const lastRow=sheet.getLastRow();
-  const stocks=[];
-  if(lastRow>=2){
-    const values=sheet.getRange(2,1,lastRow-1,6).getValues();
-    values.forEach(row=>{
-      const design=String(row[0]||'').trim();
-      if(!design)return;
-      stocks.push({
-        design:design,
-        size:String(row[1]||'').trim(),
-        image:String(row[2]||''),
-        stock:Math.max(0,Number(row[3]||0)),
-        needToPrepare:Math.max(0,Number(row[4]||0)),
-        updatedAt:toIso_(row[5])
-      });
-    });
-  }
-  return {ok:true,stocks:stocks};
+  const sheet=getStockSheet_(),lastRow=sheet.getLastRow(),stocks=[];
+  if(lastRow>=2)sheet.getRange(2,1,lastRow-1,6).getValues().forEach(row=>{
+    const design=String(row[0]||'').trim(); if(!design)return;
+    stocks.push({design,size:String(row[1]||'').trim(),image:String(row[2]||''),stock:Math.max(0,Number(row[3]||0)),needToPrepare:Math.max(0,Number(row[4]||0)),updatedAt:toIso_(row[5])});
+  });
+  return {ok:true,stocks};
 }
-
 function findStockRow_(sheet,design,size){
-  const lastRow=sheet.getLastRow();
-  if(lastRow<2)return 0;
+  const lastRow=sheet.getLastRow();if(lastRow<2)return 0;
   const values=sheet.getRange(2,1,lastRow-1,2).getValues();
-  const designKey=String(design||'').trim().toLowerCase();
-  const sizeKey=String(size||'').trim().toLowerCase();
-  for(let i=0;i<values.length;i++){
-    if(String(values[i][0]||'').trim().toLowerCase()===designKey && String(values[i][1]||'').trim().toLowerCase()===sizeKey)return i+2;
-  }
+  const dk=String(design||'').trim().toLowerCase(),sk=String(size||'').trim().toLowerCase();
+  for(let i=0;i<values.length;i++)if(String(values[i][0]||'').trim().toLowerCase()===dk&&String(values[i][1]||'').trim().toLowerCase()===sk)return i+2;
   return 0;
 }
-
 function ensureStockRow_(sheet,design,size,image){
-  let row=findStockRow_(sheet,design,size);
-  if(row){
-    if(image && !String(sheet.getRange(row,3).getValue()||'').trim())sheet.getRange(row,3).setValue(image);
-    return row;
-  }
+  let row=findStockRow_(sheet,design,size);if(row)return row;
   row=sheet.getLastRow()+1;
   sheet.getRange(row,1,1,6).setValues([[String(design||''),String(size||''),String(image||''),0,0,new Date()]]);
   return row;
 }
-
 function updateStock_(raw){
   if(!raw)throw new Error('Stock data is missing.');
   const stock=typeof raw==='string'?JSON.parse(raw):raw;
-  const design=String(stock.design||'').trim();
-  const size=String(stock.size||'').trim();
+  const design=String(stock.design||'').trim(),size=String(stock.size||'').trim();
   const value=Math.max(0,Math.floor(Number(stock.stock)||0));
-  if(!design)throw new Error('Design is required.');
-  if(!size)throw new Error('Size is required.');
-  const sheet=getStockSheet_();
-  const lock=LockService.getScriptLock();
-  lock.waitLock(10000);
+  if(!design||!size)throw new Error('Design and Size are required.');
+  const sheet=getStockSheet_(),lock=LockService.getScriptLock();lock.waitLock(10000);
   try{
     const row=ensureStockRow_(sheet,design,size,String(stock.image||''));
-    const oldStock=Math.max(0,Number(sheet.getRange(row,4).getValue()||0));
-    const oldNeed=Math.max(0,Number(sheet.getRange(row,5).getValue()||0));
-    const added=Math.max(0,value-oldStock);
-    const newNeed=Math.max(0,oldNeed-added);
+    const oldStock=Math.max(0,Number(sheet.getRange(row,4).getValue()||0)),oldNeed=Math.max(0,Number(sheet.getRange(row,5).getValue()||0));
+    const added=Math.max(0,value-oldStock),newNeed=Math.max(0,oldNeed-added);
     sheet.getRange(row,4,1,3).setValues([[value,newNeed,new Date()]]);
     return listStocks_();
   }finally{lock.releaseLock();}
 }
-
-function addStock_(raw){
-  if(!raw)throw new Error('Stock items are missing.');
-  const items=typeof raw==='string'?JSON.parse(raw):raw;
-  if(!Array.isArray(items)||!items.length)throw new Error('Select at least one size and quantity.');
-  const sheet=getStockSheet_();
-  const lock=LockService.getScriptLock();
-  lock.waitLock(10000);
+function addStock_(rawItems){
+  const items=typeof rawItems==='string'?JSON.parse(rawItems):rawItems;
+  if(!Array.isArray(items)||!items.length)throw new Error('Select at least one stock item.');
+  const sheet=getStockSheet_(),lock=LockService.getScriptLock();lock.waitLock(10000);
   try{
     const added=[];
     items.forEach(item=>{
-      const design=String(item.design||'').trim();
-      const size=String(item.size||'').trim();
-      const image=String(item.image||'').trim();
-      const quantity=Math.max(0,Math.floor(Number(item.quantity)||0));
-      if(!design||!size||quantity<=0)return;
-      const row=ensureStockRow_(sheet,design,size,image);
-      const oldStock=Math.max(0,Number(sheet.getRange(row,4).getValue()||0));
-      const oldNeed=Math.max(0,Number(sheet.getRange(row,5).getValue()||0));
-      const usedForNeed=Math.min(quantity,oldNeed);
-      const newNeed=oldNeed-usedForNeed;
-      const newStock=oldStock+(quantity-usedForNeed);
-      sheet.getRange(row,4,1,3).setValues([[newStock,newNeed,new Date()]]);
-      added.push({design,size,quantity,usedForNeed,newStock,newNeed});
+      const design=String(item.design||'').trim(),size=String(item.size||'').trim(),qty=Math.max(0,Math.floor(Number(item.quantity)||0));
+      if(!design||!size||qty<=0)return;
+      const row=ensureStockRow_(sheet,design,size,String(item.image||''));
+      const stock=Math.max(0,Number(sheet.getRange(row,4).getValue()||0)),need=Math.max(0,Number(sheet.getRange(row,5).getValue()||0));
+      const consume=Math.min(need,qty),newNeed=need-consume,newStock=stock+(qty-consume);
+      sheet.getRange(row,3,1,4).setValues([[String(item.image||sheet.getRange(row,3).getValue()||''),newStock,newNeed,new Date()]]);
+      added.push({design,size,quantity:qty,clearedNeed:consume});
     });
-    if(!added.length)throw new Error('No valid stock quantities were selected.');
-    return {ok:true,stocks:listStocks_().stocks,added:added};
+    return {ok:true,added,stocks:listStocks_().stocks};
   }finally{lock.releaseLock();}
 }
 
 function aggregateItemsByVariant_(items){
   const map={};
   (items||[]).forEach(item=>{
-    const design=String(item.design||'').trim();
-    const size=String(item.size||'').trim();
-    const qty=Math.max(0,Number(item.quantity)||0);
+    const design=String(item.design||'').trim(),size=String(item.size||'').trim(),qty=Math.max(0,Number(item.quantity)||0);
     if(!design||!size||qty<=0)return;
-    const key=design.toLowerCase()+'||'+size.toLowerCase();
-    if(!map[key])map[key]={design:design,size:size,image:String(item.image||''),quantity:0};
-    map[key].quantity+=qty;
-    if(!map[key].image)map[key].image=String(item.image||'');
+    const key=(design+'||'+size).toLowerCase();
+    if(!map[key])map[key]={design,size,image:String(item.image||''),quantity:0};
+    map[key].quantity+=qty;if(!map[key].image)map[key].image=String(item.image||'');
   });
   return Object.values(map);
 }
-
 function reserveStockForItems_(items){
-  const sheet=getStockSheet_();
-  const shortages=[];
+  const sheet=getStockSheet_(),shortages=[];
   aggregateItemsByVariant_(items).forEach(item=>{
     const row=ensureStockRow_(sheet,item.design,item.size,item.image);
-    const available=Math.max(0,Number(sheet.getRange(row,4).getValue()||0));
-    const need=Math.max(0,Number(sheet.getRange(row,5).getValue()||0));
-    const use=Math.min(available,item.quantity);
-    const shortage=item.quantity-use;
-    const newStock=available-use;
-    const newNeed=need+shortage;
-    sheet.getRange(row,3,1,4).setValues([[item.image||String(sheet.getRange(row,3).getValue()||''),newStock,newNeed,new Date()]]);
+    const available=Math.max(0,Number(sheet.getRange(row,4).getValue()||0)),need=Math.max(0,Number(sheet.getRange(row,5).getValue()||0));
+    const use=Math.min(available,item.quantity),shortage=item.quantity-use;
+    sheet.getRange(row,3,1,4).setValues([[item.image||String(sheet.getRange(row,3).getValue()||''),available-use,need+shortage,new Date()]]);
     if(shortage>0)shortages.push({design:item.design,size:item.size,quantity:shortage});
   });
-  return {shortages:shortages};
+  return {shortages};
 }
-
 function releaseStockForItems_(items){
   const sheet=getStockSheet_();
   aggregateItemsByVariant_(items).forEach(item=>{
     const row=ensureStockRow_(sheet,item.design,item.size,item.image);
-    const stock=Math.max(0,Number(sheet.getRange(row,4).getValue()||0));
-    const need=Math.max(0,Number(sheet.getRange(row,5).getValue()||0));
-    const removeFromNeed=Math.min(need,item.quantity);
-    const remaining=item.quantity-removeFromNeed;
-    const newNeed=need-removeFromNeed;
-    const newStock=stock+remaining;
-    sheet.getRange(row,3,1,4).setValues([[item.image||String(sheet.getRange(row,3).getValue()||''),newStock,newNeed,new Date()]]);
+    const stock=Math.max(0,Number(sheet.getRange(row,4).getValue()||0)),need=Math.max(0,Number(sheet.getRange(row,5).getValue()||0));
+    const removeFromNeed=Math.min(need,item.quantity),remaining=item.quantity-removeFromNeed;
+    sheet.getRange(row,3,1,4).setValues([[item.image||String(sheet.getRange(row,3).getValue()||''),stock+remaining,need-removeFromNeed,new Date()]]);
   });
 }
