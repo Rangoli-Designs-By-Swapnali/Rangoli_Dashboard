@@ -21,7 +21,8 @@ function setSelectionBarMode(isStock){
   if(cancel)cancel.textContent=isStock?"← Cancel":"← Cancel";
   if(confirm)confirm.innerHTML=isStock?'✓ Add Stock <span id="manualSelectionTotal">0</span>':'✓ Add Items <span id="manualSelectionTotal">₹0</span>';
 }
-function addManualItem(){
+async function addManualItem(){
+  if(!designsReady){try{await loadDesigns()}catch(e){return} if(!designsReady)return}
   itemSelectionMode="new";
   manualSelectionSavedCart=copyCart(cart);
   const selectionCart={};
@@ -104,7 +105,8 @@ function changeManualItemQuantity(i,amount,event){
 /* =========================================================
    ADD STOCK SELECTION
 ========================================================= */
-function startAddStock(){
+async function startAddStock(){
+  if(!designsReady){try{await loadDesigns()}catch(e){return} if(!designsReady)return}
   stockSelectionMode=true;
   stockSelection={};
   manualItemSelectionActive=false;
@@ -138,53 +140,59 @@ function updateStockSelectionBar(){
   if(el)el.textContent=String(total);
 }
 function toggleStockDesign(designName,checked){
-  const key=stockKey(designName);
-  if(checked)stockSelection[key]=Math.max(1,Number(stockSelection[key])||1);
-  else delete stockSelection[key];
-  updateStockSelectionCard(designName);
+  const design=(Array.isArray(designs)?designs:[]).find(d=>String(d.name||'').trim().toLowerCase()===String(designName||'').trim().toLowerCase());
+  if(!design)return;
+  (design.variants||[]).forEach(v=>{
+    const key=stockVariantKeyForSite(design.name,v.size);
+    if(checked)stockSelection[key]=Math.max(1,Number(stockSelection[key])||1);
+    else delete stockSelection[key];
+  });
+  renderDesigns();
   updateStockSelectionBar();
 }
-function setStockSelectionQuantity(designName,value){
-  const key=stockKey(designName);
+function setStockSelectionQuantity(designName,size,value){
+  const key=stockVariantKeyForSite(designName,size);
   const quantity=Math.max(0,Math.floor(Number(value)||0));
   if(quantity<=0)delete stockSelection[key];
   else stockSelection[key]=quantity;
-  updateStockSelectionCard(designName);
+  updateStockSelectionCard(designName,size);
   updateStockSelectionBar();
 }
-function changeStockSelectionQuantity(designName,amount,event){
+function changeStockSelectionQuantity(designName,size,amount,event){
   if(event){event.preventDefault();event.stopPropagation()}
-  const key=stockKey(designName);
-  const next=Math.max(0,(Number(stockSelection[key])||0)+amount);
-  setStockSelectionQuantity(designName,next);
+  const key=stockVariantKeyForSite(designName,size);
+  setStockSelectionQuantity(designName,size,Math.max(0,(Number(stockSelection[key])||0)+amount));
 }
-function updateStockSelectionCard(designName){
-  const key=stockKey(designName);
-  const card=document.querySelector(`[data-stock-design-key="${CSS.escape(key)}"]`);
+function updateStockSelectionCard(designName,size){
+  const designKey=String(designName||'').trim().toLowerCase();
+  const card=document.querySelector(`[data-stock-design-key="${CSS.escape(designKey)}"]`);
   if(!card)return;
+  const key=stockVariantKeyForSite(designName,size);
   const qty=Math.max(0,Number(stockSelection[key])||0);
-  const checkbox=card.querySelector('input[type="checkbox"]');
-  const input=card.querySelector('input[type="number"]');
-  if(checkbox)checkbox.checked=qty>0;
-  if(input)input.value=String(qty);
-  card.classList.toggle("selected",qty>0);
+  card.querySelectorAll('.variant-row').forEach(row=>{
+    const label=row.querySelector('.design-size');
+    if(label&&label.textContent.trim().toLowerCase()===('size: '+String(size||'').trim().toLowerCase())){
+      const checkbox=row.querySelector('input[type="checkbox"]');
+      const input=row.querySelector('input[type="number"]');
+      if(checkbox)checkbox.checked=qty>0;
+      if(input)input.value=String(qty);
+    }
+  });
+  card.classList.toggle('selected',Array.from(card.querySelectorAll('input[type="number"]')).some(i=>Number(i.value)>0));
 }
 function confirmStockSelection(){
   if(!stockSelectionMode)return;
   const items=selectedStockItems();
-  if(!items.length){alert("Select at least one design and quantity.");return}
+  if(!items.length){alert("Select at least one size and quantity.");return}
   apiCall("addStock",{items},(result,error)=>{
     if(error||!result)return;
     adminStocks=Array.isArray(result.stocks)?result.stocks:adminStocks;
-    stockSelectionMode=false;
-    stockSelection={};
-    itemSelectionMode="";
+    stockSelectionMode=false; stockSelection={}; itemSelectionMode="";
     document.body.classList.remove("manual-selection-active");
     document.getElementById("manualSelectionBar")?.classList.remove("show");
     setSelectionBarMode(false);
     document.getElementById("adminScreen")?.classList.add("show");
     document.body.style.overflow="hidden";
     adminTab("stocks");
-    renderStocks();
   });
 }

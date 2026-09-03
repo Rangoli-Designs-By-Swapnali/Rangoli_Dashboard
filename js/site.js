@@ -7,6 +7,8 @@
 ========================================================= */
 
 let designs = [];
+let designsReady = false;
+let designsLoadPromise = null;
 
 const cart = {};
 let pendingCustomerOrderMode="";
@@ -21,91 +23,28 @@ fitViewport();
 ========================================================= */
 
 async function loadDesigns() {
-
-  try {
-
-    const response =
-      await fetch(
-        "designs.json",
-        {
-          cache: "no-store"
-        }
-      );
-
-
-    if (!response.ok) {
-
-      throw new Error(
-        `Unable to load designs.json (${response.status})`
-      );
-
+  if (designsLoadPromise) return designsLoadPromise;
+  designsLoadPromise=(async function(){
+    try {
+      const response=await fetch("designs.json",{cache:"no-store"});
+      if(!response.ok)throw new Error(`Unable to load designs.json (${response.status})`);
+      const data=await response.json();
+      if(!Array.isArray(data))throw new Error("designs.json must contain a JSON array.");
+      designs=normalizeDesigns(data);
+      designsReady=true;
+      renderDesigns();
+      updateCart();
+      if(document.getElementById("adminScreen")?.classList.contains("show") && typeof renderStocks === "function") renderStocks();
+      return designs;
+    } catch(error) {
+      designsReady=false;
+      console.error(error);
+      const grid=document.getElementById("designGrid");
+      if(grid)grid.innerHTML=`<div style="padding:25px;text-align:center;background:#fff;border-radius:16px;color:#8b5268"><strong>Unable to load designs.</strong><br><br>Make sure <b>designs.json</b> is in the same folder as this HTML.<br><br><small>${escapeHtml(error.message)}</small></div>`;
+      throw error;
     }
-
-
-    const data =
-      await response.json();
-
-
-    if (!Array.isArray(data)) {
-
-      throw new Error(
-        "designs.json must contain a JSON array."
-      );
-
-    }
-
-
-    designs =
-      normalizeDesigns(data);
-
-
-    renderDesigns();
-
-    updateCart();
-
-    if(document.getElementById("adminScreen")?.classList.contains("show") && typeof renderStocks === "function") renderStocks();
-
-  }
-
-  catch (error) {
-
-    console.error(error);
-
-
-    document.getElementById(
-      "designGrid"
-    ).innerHTML = `
-
-      <div style="
-        padding:25px;
-        text-align:center;
-        background:#fff;
-        border-radius:16px;
-        color:#8b5268;
-      ">
-
-        <strong>
-          Unable to load designs.
-        </strong>
-
-        <br><br>
-
-        Make sure
-        <b>designs.json</b>
-        is in the same folder as this HTML.
-
-        <br><br>
-
-        <small>
-          ${escapeHtml(error.message)}
-        </small>
-
-      </div>
-
-    `;
-
-  }
-
+  })();
+  return designsLoadPromise;
 }
 
 

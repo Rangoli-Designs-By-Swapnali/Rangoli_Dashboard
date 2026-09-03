@@ -36,38 +36,23 @@ function renderStocks(){
   const availableBox=document.getElementById('availableStockGrid');
   const availableEmpty=document.getElementById('availableStockEmpty');
   if(!needBox||!availableBox)return;
-
   const q=(document.getElementById('stockSearch')?.value||'').toLowerCase().trim();
   const sort=document.getElementById('stockSort')?.value||'name';
   const filter=document.getElementById('stockFilter')?.value||'all';
-
   const records=[];
   (Array.isArray(designs)?designs:[]).forEach(d=>{
-    if(q && !String(d.name||'').toLowerCase().includes(q))return;
-    const variants=stockVariantRows(d);
-    if(variants.length){
-      variants.forEach(v=>records.push({...v,designObject:d}));
-    }else{
-      const legacy=(adminStocks||[]).find(r=>stockKey(r.design,r.size)===stockKey(d.name,''));
-      records.push({design:d.name,size:'',price:0,image:d.image||legacy?.image||'',stock:stockDisplayQuantity(legacy),needToPrepare:stockNeedQuantity(legacy),designObject:d});
-    }
+    if(q&&!String(d.name||'').toLowerCase().includes(q))return;
+    (Array.isArray(d.variants)?d.variants:[]).forEach((variant,index)=>{
+      const size=String(variant.size||'Standard').trim();
+      const record=getStockRecord(d.name,size);
+      records.push({design:d.name,size,price:Number(variant.price)||0,image:d.image||record.image||'',stock:stockDisplayQuantity(record),needToPrepare:stockNeedQuantity(record),variantIndex:index,designObject:d});
+    });
   });
-
-  /* Keep any Google Sheet variant that is not currently present in designs.json visible. */
-  (Array.isArray(adminStocks)?adminStocks:[]).forEach(r=>{
-    const key=stockKey(r.design,r.size);
-    if(!key)return;
-    if(records.some(x=>stockKey(x.design,x.size)===key))return;
-    if(q && !String(r.design||'').toLowerCase().includes(q))return;
-    records.push({design:String(r.design||'').trim(),size:String(r.size||'').trim(),price:Number(r.price)||0,image:String(r.image||''),stock:stockDisplayQuantity(r),needToPrepare:stockNeedQuantity(r),designObject:null});
-  });
-
   const need=records.filter(x=>x.needToPrepare>0);
   let available=records.slice();
   if(filter==='available')available=available.filter(x=>x.stock>0);
   if(filter==='zero')available=available.filter(x=>x.stock<=0);
   if(filter==='need')available=available.filter(x=>x.needToPrepare>0);
-
   need.sort((a,b)=>b.needToPrepare-a.needToPrepare||a.design.localeCompare(b.design)||a.size.localeCompare(b.size));
   available.sort((a,b)=>{
     if(sort==='stockAsc')return a.stock-b.stock||a.design.localeCompare(b.design)||a.size.localeCompare(b.size);
@@ -76,7 +61,6 @@ function renderStocks(){
     if(sort==='priceDesc')return b.price-a.price||a.design.localeCompare(b.design)||a.size.localeCompare(b.size);
     return a.design.localeCompare(b.design)||a.size.localeCompare(b.size);
   });
-
   needBox.innerHTML=need.length?need.map(stockNeedCardHTML).join(''):'';
   availableBox.innerHTML=available.length?available.map(stockCardHTML).join(''):'';
   needBox.querySelectorAll('img[data-stock-image]').forEach(img=>setDesignImage(img,img.dataset.imageSrc||''));
@@ -111,32 +95,27 @@ function changeStockQuantity(design,size,delta,event){
   if(event){event.preventDefault();event.stopPropagation()}
   const key=stockKey(design,size);
   const input=document.getElementById('stock-'+encodeURIComponent(key));
-  const current=Object.prototype.hasOwnProperty.call(stockPendingValues,key)?stockPendingValues[key]:(input?Number(input.value):stockDisplayQuantity(getStockRecord(design,size)));
-  const next=Math.max(0,Math.floor(Number(current)||0)+delta);
-  if(input)input.value=String(next);
-  queueStockSave(design,size,next);
+  const current=Object.prototype.hasOwnProperty.call(stockPendingValues,key)?Number(stockPendingValues[key]):(input?Number(input.value):stockDisplayQuantity(getStockRecord(design,size)));
+  queueStockSave(design,size,Math.max(0,Math.floor(Number(current)||0)+delta));
 }
-function saveStockQuantity(design,size,value){
-  const stock=Math.max(0,Math.floor(Number(value)||0));
-  queueStockSave(design,size,stock);
-}
+function saveStockQuantity(design,size,value){queueStockSave(design,size,Math.max(0,Math.floor(Number(value)||0)))}
 function queueStockSave(design,size,stock){
   const key=stockKey(design,size);
-  stockPendingValues[key]=stock;
+  const desired=Math.max(0,Math.floor(Number(stock)||0));
+  stockPendingValues[key]=desired;
   const input=document.getElementById('stock-'+encodeURIComponent(key));
-  if(input)input.value=String(stock);
+  if(input)input.value=String(desired);
   const existing=adminStocks.find(x=>stockKey(x.design,x.size)===key);
-  if(existing)existing.stock=stock;
-  else adminStocks.push({design:String(design),size:String(size||''),image:(Array.isArray(designs)?designs.find(d=>stockKey(d.name,'')===stockKey(design,''))?.image||'':''),stock,needToPrepare:0});
+  if(existing)existing.stock=desired;
+  else{const d=(Array.isArray(designs)?designs:[]).find(x=>stockKey(x.name,'')===stockKey(design,''));adminStocks.push({design:String(design),size:String(size||''),image:d?.image||'',stock:desired,needToPrepare:0})}
   if(stockSaveTimers[key])clearTimeout(stockSaveTimers[key]);
   stockSaveTimers[key]=setTimeout(()=>flushStockSave(design,size),180);
 }
 function flushStockSave(design,size){
   const key=stockKey(design,size);
   delete stockSaveTimers[key];
+  if(stockSavingKeys.has(key))return;
   const stock=Math.max(0,Math.floor(Number(stockPendingValues[key])||0));
-  delete stockPendingValues[key];
-  if(stockSavingKeys.has(key)){stockPendingValues[key]=stock;return}
   stockSavingKeys.add(key);
   const input=document.getElementById('stock-'+encodeURIComponent(key));
   if(input)input.disabled=true;
@@ -145,9 +124,14 @@ function flushStockSave(design,size){
     stockSavingKeys.delete(key);
     if(input)input.disabled=false;
     if(error||!result)return;
+    const latest=stockPendingValues[key];
     adminStocks=Array.isArray(result.stocks)?result.stocks:adminStocks;
-    const pending=stockPendingValues[key];
-    if(pending!==undefined){flushStockSave(design,size);return;}
+    if(latest!==undefined && Number(latest)!==Number(stock)){
+      stockSaveTimers[key]=setTimeout(()=>flushStockSave(design,size),0);
+      return;
+    }
+    delete stockPendingValues[key];
     renderStocks();
   });
 }
+

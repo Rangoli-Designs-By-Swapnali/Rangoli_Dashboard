@@ -23,6 +23,7 @@
 
 const ORDERS_SHEET = 'Orders';
 const SETTINGS_SHEET = 'Settings';
+const STOCK_SHEET = 'Stock';
 const DEFAULT_BUSINESS = "Swapnali's Rangoli";
 const DEFAULT_FOOTER = 'Thank you for your order! 🌸';
 const DEFAULT_PIN = '2468';
@@ -31,9 +32,11 @@ function setup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let orders = ss.getSheetByName(ORDERS_SHEET);
   let settings = ss.getSheetByName(SETTINGS_SHEET);
+  let stock = ss.getSheetByName(STOCK_SHEET);
 
   if (!orders) orders = ss.insertSheet(ORDERS_SHEET);
   if (!settings) settings = ss.insertSheet(SETTINGS_SHEET);
+  if (!stock) stock = ss.insertSheet(STOCK_SHEET);
 
   const orderHeaders = [
     'ID','OrderNo','CreatedAt','UpdatedAt','CustomerName','Phone',
@@ -42,6 +45,8 @@ function setup() {
   ];
 
   migrateOrdersSheet_(orders, orderHeaders);
+
+  ensureStockSchema_(stock);
 
   if (settings.getLastRow() === 0) {
     settings.getRange(1,1,1,2).setValues([['Key','Value']]);
@@ -65,6 +70,7 @@ function setup() {
 
   orders.autoResizeColumns(1, orderHeaders.length);
   settings.autoResizeColumns(1,2);
+  stock.autoResizeColumns(1,6);
 
   return 'Setup complete. Copy API_KEY from Project Settings > Script properties.';
 }
@@ -178,6 +184,15 @@ function handleRequest_(p) {
       case 'clearOrders':
         result = clearOrders_();
         break;
+      case 'listStocks':
+        result = listStocks_();
+        break;
+      case 'updateStock':
+        result = updateStock_(p.stock);
+        break;
+      case 'addStock':
+        result = addStock_(p.items);
+        break;
       case 'saveSettings':
         result = saveSettings_(p.settings);
         break;
@@ -281,7 +296,7 @@ function listOrders_() {
     });
   }
   orders.sort((a,b)=>orderDateSortValue_(b.orderDate,b.createdAt)-orderDateSortValue_(a.orderDate,a.createdAt));
-  return {ok:true,orders:orders,settings:getSettings_()};
+  return {ok:true,orders:orders,settings:getSettings_(),stocks:listStocks_().stocks};
 }
 
 function parseItems_(value) {
@@ -351,9 +366,12 @@ function saveOrder_(raw) {
     const orderDate = parseOrderDateForSheet_(order.orderDate,createdAt);
     const row = [id,orderNo,createdAt,now,String(order.customerName||''),String(order.phone||''),String(order.address||''),Number(order.shipping||0),String(order.status||'New'),String(order.payment||'Pending'),Number(order.advancePercent||0),Number(order.advanceAmount||0),Number(order.discount||0),String(order.notes||''),JSON.stringify(order.items||[]),Number(order.subtotal||0),Number(order.total||0),orderDate];
     if (row.length !== 18) throw new Error('Internal error: order row must contain exactly 18 columns.');
+    const stockResult = String(order.status||'New') === 'Cancelled' ? {shortages:[]} : reserveStockForItems_(order.items||[]);
     sheet.getRange(sheet.getLastRow()+1,1,1,18).setValues([row]);
     sheet.getRange(sheet.getLastRow(),18).setNumberFormat('yyyy-mm-dd');
-    return listOrders_();
+    const out=listOrders_();
+    out.stockShortages=stockResult.shortages||[];
+    return out;
   } finally { lock.releaseLock(); }
 }
 
@@ -364,23 +382,30 @@ function updateOrder_(raw) {
   const sheet = getSheet_();
   const id = String(order.id||'');
   if (!id) throw new Error('Order ID is missing.');
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) throw new Error('Order not found.');
-  const ids = sheet.getRange(2,1,lastRow-1,1).getValues();
-  for (let i=0;i<ids.length;i++) {
-    if (String(ids[i][0]) === id) {
-      const rowNumber=i+2;
-      const oldOrderNo=String(sheet.getRange(rowNumber,2).getValue()||'');
-      const createdAt=sheet.getRange(rowNumber,3).getValue()||new Date();
-      const orderDate=parseOrderDateForSheet_(order.orderDate,createdAt);
-      const row=[id,oldOrderNo||nextOrderNumber_(sheet),createdAt,new Date(),String(order.customerName||''),String(order.phone||''),String(order.address||''),Number(order.shipping||0),String(order.status||'New'),String(order.payment||'Pending'),Number(order.advancePercent||0),Number(order.advanceAmount||0),Number(order.discount||0),String(order.notes||''),JSON.stringify(order.items||[]),Number(order.subtotal||0),Number(order.total||0),orderDate];
-      if (row.length !== 18) throw new Error('Internal error: updated order row must contain exactly 18 columns.');
-      sheet.getRange(rowNumber,1,1,18).setValues([row]);
-      sheet.getRange(rowNumber,18).setNumberFormat('yyyy-mm-dd');
-      return listOrders_();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) throw new Error('Order not found.');
+    const ids = sheet.getRange(2,1,lastRow-1,1).getValues();
+    for (let i=0;i<ids.length;i++) {
+      if (String(ids[i][0]) === id) {
+        const rowNumber=i+2;
+        const oldOrderNo=String(sheet.getRange(rowNumber,2).getValue()||'');
+        const createdAt=sheet.getRange(rowNumber,3).getValue()||new Date();
+        const oldStatus=String(sheet.getRange(rowNumber,9).getValue()||'New');
+        const oldItems=parseItems_(sheet.getRange(rowNumber,15).getValue());
+        const orderDate=parseOrderDateForSheet_(order.orderDate,createdAt);
+        if(oldStatus !== 'Cancelled') releaseStockForItems_(oldItems);
+        const stockResult = String(order.status||'New') === 'Cancelled' ? {shortages:[]} : reserveStockForItems_(order.items||[]);
+        const row=[id,oldOrderNo||nextOrderNumber_(sheet),createdAt,new Date(),String(order.customerName||''),String(order.phone||''),String(order.address||''),Number(order.shipping||0),String(order.status||'New'),String(order.payment||'Pending'),Number(order.advancePercent||0),Number(order.advanceAmount||0),Number(order.discount||0),String(order.notes||''),JSON.stringify(order.items||[]),Number(order.subtotal||0),Number(order.total||0),orderDate];
+        sheet.getRange(rowNumber,1,1,18).setValues([row]);
+        sheet.getRange(rowNumber,18).setNumberFormat('yyyy-mm-dd');
+        const out=listOrders_(); out.stockShortages=stockResult.shortages||[]; return out;
+      }
     }
-  }
-  throw new Error('Order not found.');
+    throw new Error('Order not found.');
+  } finally { lock.releaseLock(); }
 }
 
 function parseOrderDateForSheet_(value, fallback) {
@@ -429,52 +454,69 @@ function validateOrder_(order) {
 
 function updateStatus_(id, status) {
   if (!id) throw new Error('Order ID is missing.');
-
-  const allowed = ['New','Confirmed','Packed','Dispatched','Delivered','Cancelled'];
+  const allowed = ['New','Confirmed','Dispatched','Delivered','Cancelled'];
   if (allowed.indexOf(status) === -1) throw new Error('Invalid status.');
-
   const sheet = getSheet_();
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) throw new Error('Order not found.');
-
-  const ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-
-  for (let i = 0; i < ids.length; i++) {
-    if (String(ids[i][0]) === id) {
-      const rowNumber = i + 2;
-      sheet.getRange(rowNumber, 4).setValue(new Date());
-      sheet.getRange(rowNumber, 9).setValue(status);
-      return listOrders_();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) throw new Error('Order not found.');
+    const ids = sheet.getRange(2,1,lastRow-1,1).getValues();
+    for (let i=0;i<ids.length;i++) {
+      if (String(ids[i][0]) === id) {
+        const rowNumber=i+2;
+        const oldStatus=String(sheet.getRange(rowNumber,9).getValue()||'New');
+        const items=parseItems_(sheet.getRange(rowNumber,15).getValue());
+        let stockResult={shortages:[]};
+        if(oldStatus !== 'Cancelled' && status === 'Cancelled') releaseStockForItems_(items);
+        if(oldStatus === 'Cancelled' && status !== 'Cancelled') stockResult=reserveStockForItems_(items);
+        sheet.getRange(rowNumber,4).setValue(new Date());
+        sheet.getRange(rowNumber,9).setValue(status);
+        const out=listOrders_(); out.stockShortages=stockResult.shortages||[]; return out;
+      }
     }
-  }
-
-  throw new Error('Order not found.');
+    throw new Error('Order not found.');
+  } finally { lock.releaseLock(); }
 }
 
 function deleteOrder_(id) {
   if (!id) throw new Error('Order ID is missing.');
-
   const sheet = getSheet_();
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) throw new Error('Order not found.');
-
-  const ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-
-  for (let i = ids.length - 1; i >= 0; i--) {
-    if (String(ids[i][0]) === id) {
-      sheet.deleteRow(i + 2);
-      return listOrders_();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) throw new Error('Order not found.');
+    const ids = sheet.getRange(2,1,lastRow-1,1).getValues();
+    for (let i=ids.length-1;i>=0;i--) {
+      if (String(ids[i][0]) === id) {
+        const rowNumber=i+2;
+        const status=String(sheet.getRange(rowNumber,9).getValue()||'New');
+        const items=parseItems_(sheet.getRange(rowNumber,15).getValue());
+        if(status !== 'Cancelled') releaseStockForItems_(items);
+        sheet.deleteRow(rowNumber);
+        return listOrders_();
+      }
     }
-  }
-
-  throw new Error('Order not found.');
+    throw new Error('Order not found.');
+  } finally { lock.releaseLock(); }
 }
 
 function clearOrders_() {
   const sheet = getSheet_();
-  const lastRow = sheet.getLastRow();
-  if (lastRow >= 2) sheet.deleteRows(2, lastRow - 1);
-  return listOrders_();
+  const stockSheet = getStockSheet_();
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const lastRow=sheet.getLastRow();
+    if(lastRow>=2){
+      const values=sheet.getRange(2,1,lastRow-1,18).getValues();
+      values.forEach(row=>{ if(String(row[8]||'New')!=='Cancelled') releaseStockForItems_(parseItems_(row[14])); });
+      sheet.deleteRows(2,lastRow-1);
+    }
+    return listOrders_();
+  } finally { lock.releaseLock(); }
 }
 
 function saveSettings_(raw) {
@@ -514,4 +556,186 @@ function setSettingRow_(sheet, key, value) {
   }
 
   sheet.appendRow([key, value]);
+}
+
+
+function ensureStockSchema_(sheet){
+  const headers=['Design','Size','Image','Stock','NeedToPrepare','UpdatedAt'];
+  const lastCol=Math.max(sheet.getLastColumn(),1);
+  const firstRow=sheet.getLastRow()>0?sheet.getRange(1,1,1,lastCol).getValues()[0]:[];
+  const isNew=String(firstRow[0]||'').trim()==='Design' && String(firstRow[1]||'').trim()==='Size' && String(firstRow[2]||'').trim()==='Image';
+  if(isNew){
+    sheet.getRange(1,1,1,6).setValues([headers]);
+    sheet.getRange(1,1,1,6).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    return;
+  }
+  const isLegacy=String(firstRow[0]||'').trim()==='Design' && String(firstRow[1]||'').trim()==='Image' && String(firstRow[2]||'').trim()==='Stock';
+  if(isLegacy){
+    const lastRow=sheet.getLastRow();
+    const rows=lastRow>=2?sheet.getRange(2,1,lastRow-1,5).getValues():[];
+    const converted=rows.map(r=>[String(r[0]||''),String(''),String(r[1]||''),Number(r[2]||0),Number(r[3]||0),r[4]||'']);
+    sheet.clearContents();
+    sheet.getRange(1,1,1,6).setValues([headers]);
+    if(converted.length)sheet.getRange(2,1,converted.length,6).setValues(converted);
+    sheet.getRange(1,1,1,6).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    return;
+  }
+  if(sheet.getLastRow()===0){
+    sheet.getRange(1,1,1,6).setValues([headers]);
+    sheet.getRange(1,1,1,6).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+  }
+}
+
+function getStockSheet_(){
+  const ss=SpreadsheetApp.getActiveSpreadsheet();
+  let sheet=ss.getSheetByName(STOCK_SHEET);
+  if(!sheet){ setup(); sheet=ss.getSheetByName(STOCK_SHEET); }
+  if(!sheet)throw new Error('Stock sheet could not be created.');
+  ensureStockSchema_(sheet);
+  return sheet;
+}
+
+function listStocks_(){
+  const sheet=getStockSheet_();
+  const lastRow=sheet.getLastRow();
+  const stocks=[];
+  if(lastRow>=2){
+    const values=sheet.getRange(2,1,lastRow-1,6).getValues();
+    values.forEach(row=>{
+      const design=String(row[0]||'').trim();
+      if(!design)return;
+      stocks.push({
+        design:design,
+        size:String(row[1]||'').trim(),
+        image:String(row[2]||''),
+        stock:Math.max(0,Number(row[3]||0)),
+        needToPrepare:Math.max(0,Number(row[4]||0)),
+        updatedAt:toIso_(row[5])
+      });
+    });
+  }
+  return {ok:true,stocks:stocks};
+}
+
+function findStockRow_(sheet,design,size){
+  const lastRow=sheet.getLastRow();
+  if(lastRow<2)return 0;
+  const values=sheet.getRange(2,1,lastRow-1,2).getValues();
+  const designKey=String(design||'').trim().toLowerCase();
+  const sizeKey=String(size||'').trim().toLowerCase();
+  for(let i=0;i<values.length;i++){
+    if(String(values[i][0]||'').trim().toLowerCase()===designKey && String(values[i][1]||'').trim().toLowerCase()===sizeKey)return i+2;
+  }
+  return 0;
+}
+
+function ensureStockRow_(sheet,design,size,image){
+  let row=findStockRow_(sheet,design,size);
+  if(row){
+    if(image && !String(sheet.getRange(row,3).getValue()||'').trim())sheet.getRange(row,3).setValue(image);
+    return row;
+  }
+  row=sheet.getLastRow()+1;
+  sheet.getRange(row,1,1,6).setValues([[String(design||''),String(size||''),String(image||''),0,0,new Date()]]);
+  return row;
+}
+
+function updateStock_(raw){
+  if(!raw)throw new Error('Stock data is missing.');
+  const stock=typeof raw==='string'?JSON.parse(raw):raw;
+  const design=String(stock.design||'').trim();
+  const size=String(stock.size||'').trim();
+  const value=Math.max(0,Math.floor(Number(stock.stock)||0));
+  if(!design)throw new Error('Design is required.');
+  if(!size)throw new Error('Size is required.');
+  const sheet=getStockSheet_();
+  const lock=LockService.getScriptLock();
+  lock.waitLock(10000);
+  try{
+    const row=ensureStockRow_(sheet,design,size,String(stock.image||''));
+    const oldStock=Math.max(0,Number(sheet.getRange(row,4).getValue()||0));
+    const oldNeed=Math.max(0,Number(sheet.getRange(row,5).getValue()||0));
+    const added=Math.max(0,value-oldStock);
+    const newNeed=Math.max(0,oldNeed-added);
+    sheet.getRange(row,4,1,3).setValues([[value,newNeed,new Date()]]);
+    return listStocks_();
+  }finally{lock.releaseLock();}
+}
+
+function addStock_(raw){
+  if(!raw)throw new Error('Stock items are missing.');
+  const items=typeof raw==='string'?JSON.parse(raw):raw;
+  if(!Array.isArray(items)||!items.length)throw new Error('Select at least one size and quantity.');
+  const sheet=getStockSheet_();
+  const lock=LockService.getScriptLock();
+  lock.waitLock(10000);
+  try{
+    const added=[];
+    items.forEach(item=>{
+      const design=String(item.design||'').trim();
+      const size=String(item.size||'').trim();
+      const image=String(item.image||'').trim();
+      const quantity=Math.max(0,Math.floor(Number(item.quantity)||0));
+      if(!design||!size||quantity<=0)return;
+      const row=ensureStockRow_(sheet,design,size,image);
+      const oldStock=Math.max(0,Number(sheet.getRange(row,4).getValue()||0));
+      const oldNeed=Math.max(0,Number(sheet.getRange(row,5).getValue()||0));
+      const usedForNeed=Math.min(quantity,oldNeed);
+      const newNeed=oldNeed-usedForNeed;
+      const newStock=oldStock+(quantity-usedForNeed);
+      sheet.getRange(row,4,1,3).setValues([[newStock,newNeed,new Date()]]);
+      added.push({design,size,quantity,usedForNeed,newStock,newNeed});
+    });
+    if(!added.length)throw new Error('No valid stock quantities were selected.');
+    return {ok:true,stocks:listStocks_().stocks,added:added};
+  }finally{lock.releaseLock();}
+}
+
+function aggregateItemsByVariant_(items){
+  const map={};
+  (items||[]).forEach(item=>{
+    const design=String(item.design||'').trim();
+    const size=String(item.size||'').trim();
+    const qty=Math.max(0,Number(item.quantity)||0);
+    if(!design||!size||qty<=0)return;
+    const key=design.toLowerCase()+'||'+size.toLowerCase();
+    if(!map[key])map[key]={design:design,size:size,image:String(item.image||''),quantity:0};
+    map[key].quantity+=qty;
+    if(!map[key].image)map[key].image=String(item.image||'');
+  });
+  return Object.values(map);
+}
+
+function reserveStockForItems_(items){
+  const sheet=getStockSheet_();
+  const shortages=[];
+  aggregateItemsByVariant_(items).forEach(item=>{
+    const row=ensureStockRow_(sheet,item.design,item.size,item.image);
+    const available=Math.max(0,Number(sheet.getRange(row,4).getValue()||0));
+    const need=Math.max(0,Number(sheet.getRange(row,5).getValue()||0));
+    const use=Math.min(available,item.quantity);
+    const shortage=item.quantity-use;
+    const newStock=available-use;
+    const newNeed=need+shortage;
+    sheet.getRange(row,3,1,4).setValues([[item.image||String(sheet.getRange(row,3).getValue()||''),newStock,newNeed,new Date()]]);
+    if(shortage>0)shortages.push({design:item.design,size:item.size,quantity:shortage});
+  });
+  return {shortages:shortages};
+}
+
+function releaseStockForItems_(items){
+  const sheet=getStockSheet_();
+  aggregateItemsByVariant_(items).forEach(item=>{
+    const row=ensureStockRow_(sheet,item.design,item.size,item.image);
+    const stock=Math.max(0,Number(sheet.getRange(row,4).getValue()||0));
+    const need=Math.max(0,Number(sheet.getRange(row,5).getValue()||0));
+    const removeFromNeed=Math.min(need,item.quantity);
+    const remaining=item.quantity-removeFromNeed;
+    const newNeed=need-removeFromNeed;
+    const newStock=stock+remaining;
+    sheet.getRange(row,3,1,4).setValues([[item.image||String(sheet.getRange(row,3).getValue()||''),newStock,newNeed,new Date()]]);
+  });
 }
