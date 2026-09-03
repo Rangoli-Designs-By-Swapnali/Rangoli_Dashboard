@@ -7,10 +7,11 @@
 ========================================================= */
 
 let designs = [];
-let designsReady = false;
-let designsLoadPromise = null;
+let designsLoadedPromise = null;
 
 const cart = {};
+let stockSelectionMode = false;
+let stockSelection = {};
 let pendingCustomerOrderMode="";
 function fitViewport(){document.documentElement.style.setProperty("--vh",(window.innerHeight*0.01)+"px");}
 window.addEventListener("resize",fitViewport,{passive:true});
@@ -23,28 +24,89 @@ fitViewport();
 ========================================================= */
 
 async function loadDesigns() {
-  if (designsLoadPromise) return designsLoadPromise;
-  designsLoadPromise=(async function(){
-    try {
-      const response=await fetch("designs.json",{cache:"no-store"});
-      if(!response.ok)throw new Error(`Unable to load designs.json (${response.status})`);
-      const data=await response.json();
-      if(!Array.isArray(data))throw new Error("designs.json must contain a JSON array.");
-      designs=normalizeDesigns(data);
-      designsReady=true;
-      renderDesigns();
-      updateCart();
-      if(document.getElementById("adminScreen")?.classList.contains("show") && typeof renderStocks === "function") renderStocks();
-      return designs;
-    } catch(error) {
-      designsReady=false;
-      console.error(error);
-      const grid=document.getElementById("designGrid");
-      if(grid)grid.innerHTML=`<div style="padding:25px;text-align:center;background:#fff;border-radius:16px;color:#8b5268"><strong>Unable to load designs.</strong><br><br>Make sure <b>designs.json</b> is in the same folder as this HTML.<br><br><small>${escapeHtml(error.message)}</small></div>`;
-      throw error;
+
+  try {
+
+    const response =
+      await fetch(
+        "designs.json",
+        {
+          cache: "no-store"
+        }
+      );
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        `Unable to load designs.json (${response.status})`
+      );
+
     }
-  })();
-  return designsLoadPromise;
+
+
+    const data =
+      await response.json();
+
+
+    if (!Array.isArray(data)) {
+
+      throw new Error(
+        "designs.json must contain a JSON array."
+      );
+
+    }
+
+
+    designs =
+      normalizeDesigns(data);
+
+
+    renderDesigns();
+
+    updateCart();
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+
+    document.getElementById(
+      "designGrid"
+    ).innerHTML = `
+
+      <div style="
+        padding:25px;
+        text-align:center;
+        background:#fff;
+        border-radius:16px;
+        color:#8b5268;
+      ">
+
+        <strong>
+          Unable to load designs.
+        </strong>
+
+        <br><br>
+
+        Make sure
+        <b>designs.json</b>
+        is in the same folder as this HTML.
+
+        <br><br>
+
+        <small>
+          ${escapeHtml(error.message)}
+        </small>
+
+      </div>
+
+    `;
+
+  }
+
 }
 
 
@@ -266,56 +328,34 @@ function renderDesigns() {
   const grid=document.getElementById("designGrid");
   if(!grid)return;
   grid.innerHTML="";
-
   designs.forEach(design=>{
     const card=document.createElement("div");
     card.className="design-card";
     card.id=`card-${design.id}`;
-    if(stockSelectionMode)card.dataset.stockDesignKey=stockKeyForSite(design.name);
-
     const imageWrapper=document.createElement("div");
     imageWrapper.className="design-image-wrapper";
     const image=document.createElement("img");
-    image.className="design-image";
-    image.alt=design.name;
-    image.loading="lazy";
-    imageWrapper.appendChild(image);
-    setupImageFallback(image,design.image);
-    card.appendChild(imageWrapper);
-
-    const title=document.createElement("div");
-    title.className="design-title";
-    title.textContent=design.name;
-    card.appendChild(title);
-
-    const bottom=document.createElement("div");
-    bottom.className="design-bottom";
-
-    if(stockSelectionMode){
-      design.variants.forEach((variant,variantIndex)=>{
-        const key=stockVariantKeyForSite(design.name,variant.size);
-        const quantity=Math.max(0,Math.floor(Number(stockSelection[key])||0));
-        const row=document.createElement("div");
-        row.className="variant-row";
+    image.className="design-image"; image.alt=design.name; image.loading="lazy";
+    imageWrapper.appendChild(image); setupImageFallback(image,design.image); card.appendChild(imageWrapper);
+    const title=document.createElement("div"); title.className="design-title"; title.textContent=design.name; card.appendChild(title);
+    const bottom=document.createElement("div"); bottom.className="design-bottom";
+    design.variants.forEach((variant,variantIndex)=>{
+      const row=document.createElement("div"); row.className="variant-row";
+      if(stockSelectionMode){
+        const key=getCartKey(design.id,variantIndex);
+        const quantity=Number(stockSelection[key]||0);
         row.innerHTML=`
           <label class="select-label" title="Select size">
-            <input type="checkbox" ${quantity>0?"checked":""} onchange="toggleStockVariant(${JSON.stringify(design.name)},${JSON.stringify(variant.size)},this.checked)">
+            <input type="checkbox" data-design-id="${design.id}" data-variant-index="${variantIndex}" ${quantity>0?'checked':''} onchange="toggleStockVariant(${design.id},${variantIndex},this.checked)">
           </label>
           <span class="design-size">Size: ${escapeHtml(variant.size)}</span>
           <span class="design-price">₹${formatPrice(variant.price)}</span>
           <div class="quantity-controls">
-            <button type="button" class="quantity-btn" onclick="changeStockSelectionQuantity(${JSON.stringify(design.name)},${JSON.stringify(variant.size)},-1,event)">−</button>
-            <input type="number" min="0" step="1" value="${quantity}" style="width:42px;text-align:center;border:0;background:transparent;font-weight:700;color:#5b1738" onchange="setStockSelectionQuantity(${JSON.stringify(design.name)},${JSON.stringify(variant.size)},this.value)">
-            <button type="button" class="quantity-btn" onclick="changeStockSelectionQuantity(${JSON.stringify(design.name)},${JSON.stringify(variant.size)},1,event)">+</button>
-          </div>
-        `;
-        bottom.appendChild(row);
-      });
-      card.classList.toggle("selected",design.variants.some(v=>Number(stockSelection[stockVariantKeyForSite(design.name,v.size)])>0));
-    }else{
-      design.variants.forEach((variant,variantIndex)=>{
-        const row=document.createElement("div");
-        row.className="variant-row";
+            <button type="button" class="quantity-btn" onclick="changeStockSelectionQuantity(${design.id},${variantIndex},-1,event)">−</button>
+            <span class="quantity-value" id="stockQty-${design.id}-${variantIndex}">${quantity}</span>
+            <button type="button" class="quantity-btn" onclick="changeStockSelectionQuantity(${design.id},${variantIndex},1,event)">+</button>
+          </div>`;
+      }else{
         row.innerHTML=`
           <label class="select-label" title="Select design">
             <input type="checkbox" data-design-id="${design.id}" data-variant-index="${variantIndex}" onchange="toggleVariant(${design.id},${variantIndex},this.checked)">
@@ -323,71 +363,46 @@ function renderDesigns() {
           <span class="design-size">Size: ${escapeHtml(variant.size)}</span>
           <span class="design-price">₹${formatPrice(variant.price)}</span>
           <div class="quantity-controls">
-            <button type="button" class="quantity-btn" onclick="changeQuantity(${design.id},${variantIndex},-1)">−</button>
+            <button type="button" class="quantity-btn" onclick="changeQuantity(${design.id},${variantIndex},-1,event)">−</button>
             <span class="quantity-value" id="qty-${design.id}-${variantIndex}">0</span>
-            <button type="button" class="quantity-btn" onclick="changeQuantity(${design.id},${variantIndex},1)">+</button>
-          </div>
-        `;
-        bottom.appendChild(row);
-      });
-    }
-
-    card.appendChild(bottom);
-    grid.appendChild(card);
+            <button type="button" class="quantity-btn" onclick="changeQuantity(${design.id},${variantIndex},1,event)">+</button>
+          </div>`;
+      }
+      bottom.appendChild(row);
+    });
+    card.appendChild(bottom); grid.appendChild(card);
   });
 }
-function stockKeyForSite(design){return String(design||"").trim().toLowerCase()}
-function stockVariantKeyForSite(design,size){return String(design||"").trim().toLowerCase()+"||"+String(size||"").trim().toLowerCase()}
-function toggleStockVariant(designName,size,checked){
-  const key=stockVariantKeyForSite(designName,size);
-  if(checked)stockSelection[key]=Math.max(1,Number(stockSelection[key])||1);
+function toggleStockVariant(designId,variantIndex,selected){
+  const key=getCartKey(designId,variantIndex);
+  if(selected)stockSelection[key]=Math.max(1,Number(stockSelection[key]||0));
   else delete stockSelection[key];
-  updateStockSelectionCard(designName,size);
-  updateStockSelectionBar();
+  updateStockSelectionCard(designId,variantIndex); updateStockSelectionBar();
 }
-function setStockSelectionQuantity(designName,size,value){
-  const key=stockVariantKeyForSite(designName,size);
-  const quantity=Math.max(0,Math.floor(Number(value)||0));
-  if(quantity<=0)delete stockSelection[key];
-  else stockSelection[key]=quantity;
-  updateStockSelectionCard(designName,size);
-  updateStockSelectionBar();
+function setStockSelectionQuantity(designId,variantIndex,quantity){
+  const key=getCartKey(designId,variantIndex); const q=Math.max(0,Math.floor(Number(quantity)||0));
+  if(q<=0)delete stockSelection[key]; else stockSelection[key]=q;
+  updateStockSelectionCard(designId,variantIndex); updateStockSelectionBar();
 }
-function changeStockSelectionQuantity(designName,size,amount,event){
+function changeStockSelectionQuantity(designId,variantIndex,amount,event){
   if(event){event.preventDefault();event.stopPropagation()}
-  const key=stockVariantKeyForSite(designName,size);
-  const next=Math.max(0,(Number(stockSelection[key])||0)+amount);
-  setStockSelectionQuantity(designName,size,next);
+  const key=getCartKey(designId,variantIndex);
+  const next=Math.max(0,Math.floor(Number(stockSelection[key]||0))+amount);
+  setStockSelectionQuantity(designId,variantIndex,next);
 }
-function updateStockSelectionCard(designName,size){
-  const designKey=String(designName||"").trim().toLowerCase();
-  const card=document.querySelector(`[data-stock-design-key="${CSS.escape(designKey)}"]`);
-  if(!card)return;
-  const key=stockVariantKeyForSite(designName,size);
-  const qty=Math.max(0,Number(stockSelection[key])||0);
-  const rows=card.querySelectorAll('.variant-row');
-  let target=null;
-  rows.forEach(row=>{const label=row.querySelector('.design-size');if(label&&label.textContent.trim().toLowerCase()===('size: '+String(size||'').trim().toLowerCase()))target=row});
-  if(!target)return;
-  const checkbox=target.querySelector('input[type="checkbox"]');
-  const input=target.querySelector('input[type="number"]');
-  if(checkbox)checkbox.checked=qty>0;
-  if(input)input.value=String(qty);
-  card.classList.toggle('selected',Array.from(card.querySelectorAll('input[type="number"]')).some(i=>Number(i.value)>0));
-}
-function selectedStockItems(){
-  const selected=[];
-  designs.forEach(d=>d.variants.forEach(v=>{
-    const quantity=Math.max(0,Math.floor(Number(stockSelection[stockVariantKeyForSite(d.name,v.size)]||0)));
-    if(quantity>0)selected.push({design:d.name,size:v.size,price:Number(v.price)||0,image:d.image||"",quantity,designId:d.id,variantIndex:d.variants.indexOf(v)});
-  }));
-  return selected;
+function updateStockSelectionCard(designId,variantIndex){
+  const key=getCartKey(designId,variantIndex),q=Number(stockSelection[key]||0);
+  const el=document.getElementById(`stockQty-${designId}-${variantIndex}`); if(el)el.textContent=String(q);
+  const card=document.getElementById(`card-${designId}`); const row=card?.querySelectorAll('.variant-row')[variantIndex];
+  const cb=row?.querySelector('input[type="checkbox"]'); if(cb)cb.checked=q>0;
 }
 function updateStockSelectionBar(){
-  const total=selectedStockItems().reduce((sum,item)=>sum+item.quantity,0);
-  const el=document.getElementById('manualSelectionTotal');
-  if(el)el.textContent=String(total);
+  const el=document.getElementById("manualSelectionTotal"); if(!el)return;
+  const count=Object.values(stockSelection||{}).reduce((a,v)=>a+Number(v||0),0);
+  el.textContent=`${count} item${count===1?'':'s'}`;
 }
+
+
 /* =========================================================
    PRICE
 ========================================================= */

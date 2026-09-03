@@ -98,15 +98,7 @@ function apiCall(action, params={}, callback){
   document.head.appendChild(script);
 }
 
-function isLocalTestMode(){
-  return location.hostname === "127.0.0.1" || location.hostname === "localhost";
-}
-
 function requestAdminAccess(){
-  if(isLocalTestMode()){
-    openAdmin();
-    return;
-  }
   document.getElementById("adminPinInput").value="";
   document.getElementById("pinModal").classList.add("show");
   setTimeout(()=>document.getElementById("adminPinInput").focus(),80);
@@ -160,9 +152,6 @@ function adminTab(tab,syncUrl=true){
   const p=document.getElementById("admin-"+tab);if(p)p.classList.add("active");
 
   if(syncUrl)setAdminTabHash(tab);
-
-  const addStockBtn=document.getElementById("adminAddStockBtn");
-  if(addStockBtn)addStockBtn.style.display=tab==="stocks"?"inline-flex":"none";
 
   if(tab==="dashboard")renderAdminDashboard();
   if(tab==="orders"){populateMonthFilters();renderOrdersTable()}

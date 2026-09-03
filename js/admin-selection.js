@@ -1,6 +1,6 @@
 /* =========================================================
    ADMIN SELECTION MODULE
-   Catalogue selection for Manual Order / Edit Order / Add Stock
+   Catalogue selection for Manual Order / Edit Order
 ========================================================= */
 function copyCart(source){const copy={};Object.keys(source||{}).forEach(k=>{copy[k]=Number(source[k])||0});return copy}
 function replaceCart(source){
@@ -13,16 +13,9 @@ function replaceCart(source){
 }
 function updateManualSelectionBar(){
   const total=document.getElementById("manualSelectionTotal");
-  if(total)total.textContent=stockSelectionMode?String(selectedStockItems().reduce((s,x)=>s+(Number(x.quantity)||0),0)):adminMoney(getCartTotal());
+  if(total)total.textContent=adminMoney(getCartTotal());
 }
-function setSelectionBarMode(isStock){
-  const cancel=document.getElementById("selectionCancelBtn");
-  const confirm=document.getElementById("selectionConfirmBtn");
-  if(cancel)cancel.textContent=isStock?"← Cancel":"← Cancel";
-  if(confirm)confirm.innerHTML=isStock?'✓ Add Stock <span id="manualSelectionTotal">0</span>':'✓ Add Items <span id="manualSelectionTotal">₹0</span>';
-}
-async function addManualItem(){
-  if(!designsReady){try{await loadDesigns()}catch(e){return} if(!designsReady)return}
+function addManualItem(){
   itemSelectionMode="new";
   manualSelectionSavedCart=copyCart(cart);
   const selectionCart={};
@@ -35,7 +28,6 @@ async function addManualItem(){
   document.body.style.overflow="";
   document.body.classList.add("manual-selection-active");
   document.getElementById("manualSelectionBar").classList.add("show");
-  setSelectionBarMode(false);
   updateManualSelectionBar();
   window.scrollTo({top:0,behavior:"auto"});
 }
@@ -44,7 +36,6 @@ function finishManualSelectionUI(){
   itemSelectionMode="";
   document.body.classList.remove("manual-selection-active");
   document.getElementById("manualSelectionBar").classList.remove("show");
-  setSelectionBarMode(false);
 }
 function returnToManualOrder(){
   document.getElementById("adminScreen").classList.add("show");
@@ -61,7 +52,7 @@ function selectedCatalogueItems(){
   return selected;
 }
 function cancelManualItemSelection(){
-  if(stockSelectionMode){cancelStockSelection();return}
+  if(typeof stockSelectionMode!=="undefined" && stockSelectionMode){cancelStockSelection();return;}
   if(!manualItemSelectionActive)return;
   replaceCart(manualSelectionSavedCart||{});
   manualSelectionSavedCart=null;
@@ -71,7 +62,7 @@ function cancelManualItemSelection(){
   else returnToManualOrder();
 }
 function confirmManualItemSelection(){
-  if(stockSelectionMode){confirmStockSelection();return}
+  if(typeof stockSelectionMode!=="undefined" && stockSelectionMode){confirmStockSelection();return;}
   if(!manualItemSelectionActive)return;
   const selected=selectedCatalogueItems();
   if(!selected.length){alert("Select at least one item.");return}
@@ -100,99 +91,4 @@ function changeManualItemQuantity(i,amount,event){
   if(next<=0)newOrderItems.splice(i,1);else item.quantity=next;
   renderNewOrderItems();
   updateManualOrderTotal();
-}
-
-/* =========================================================
-   ADD STOCK SELECTION
-========================================================= */
-async function startAddStock(){
-  if(!designsReady){try{await loadDesigns()}catch(e){return} if(!designsReady)return}
-  stockSelectionMode=true;
-  stockSelection={};
-  manualItemSelectionActive=false;
-  itemSelectionMode="stock";
-  const admin=document.getElementById("adminScreen");
-  if(admin)admin.classList.remove("show");
-  document.body.style.overflow="";
-  document.body.classList.add("manual-selection-active");
-  const bar=document.getElementById("manualSelectionBar");
-  if(bar)bar.classList.add("show");
-  setSelectionBarMode(true);
-  renderDesigns();
-  updateStockSelectionBar();
-  window.scrollTo({top:0,behavior:"auto"});
-}
-function cancelStockSelection(){
-  stockSelectionMode=false;
-  stockSelection={};
-  itemSelectionMode="";
-  document.body.classList.remove("manual-selection-active");
-  document.getElementById("manualSelectionBar")?.classList.remove("show");
-  setSelectionBarMode(false);
-  renderDesigns();
-  document.getElementById("adminScreen")?.classList.add("show");
-  document.body.style.overflow="hidden";
-  adminTab("stocks");
-}
-function updateStockSelectionBar(){
-  const total=selectedStockItems().reduce((sum,item)=>sum+item.quantity,0);
-  const el=document.getElementById("manualSelectionTotal");
-  if(el)el.textContent=String(total);
-}
-function toggleStockDesign(designName,checked){
-  const design=(Array.isArray(designs)?designs:[]).find(d=>String(d.name||'').trim().toLowerCase()===String(designName||'').trim().toLowerCase());
-  if(!design)return;
-  (design.variants||[]).forEach(v=>{
-    const key=stockVariantKeyForSite(design.name,v.size);
-    if(checked)stockSelection[key]=Math.max(1,Number(stockSelection[key])||1);
-    else delete stockSelection[key];
-  });
-  renderDesigns();
-  updateStockSelectionBar();
-}
-function setStockSelectionQuantity(designName,size,value){
-  const key=stockVariantKeyForSite(designName,size);
-  const quantity=Math.max(0,Math.floor(Number(value)||0));
-  if(quantity<=0)delete stockSelection[key];
-  else stockSelection[key]=quantity;
-  updateStockSelectionCard(designName,size);
-  updateStockSelectionBar();
-}
-function changeStockSelectionQuantity(designName,size,amount,event){
-  if(event){event.preventDefault();event.stopPropagation()}
-  const key=stockVariantKeyForSite(designName,size);
-  setStockSelectionQuantity(designName,size,Math.max(0,(Number(stockSelection[key])||0)+amount));
-}
-function updateStockSelectionCard(designName,size){
-  const designKey=String(designName||'').trim().toLowerCase();
-  const card=document.querySelector(`[data-stock-design-key="${CSS.escape(designKey)}"]`);
-  if(!card)return;
-  const key=stockVariantKeyForSite(designName,size);
-  const qty=Math.max(0,Number(stockSelection[key])||0);
-  card.querySelectorAll('.variant-row').forEach(row=>{
-    const label=row.querySelector('.design-size');
-    if(label&&label.textContent.trim().toLowerCase()===('size: '+String(size||'').trim().toLowerCase())){
-      const checkbox=row.querySelector('input[type="checkbox"]');
-      const input=row.querySelector('input[type="number"]');
-      if(checkbox)checkbox.checked=qty>0;
-      if(input)input.value=String(qty);
-    }
-  });
-  card.classList.toggle('selected',Array.from(card.querySelectorAll('input[type="number"]')).some(i=>Number(i.value)>0));
-}
-function confirmStockSelection(){
-  if(!stockSelectionMode)return;
-  const items=selectedStockItems();
-  if(!items.length){alert("Select at least one size and quantity.");return}
-  apiCall("addStock",{items},(result,error)=>{
-    if(error||!result)return;
-    adminStocks=Array.isArray(result.stocks)?result.stocks:adminStocks;
-    stockSelectionMode=false; stockSelection={}; itemSelectionMode="";
-    document.body.classList.remove("manual-selection-active");
-    document.getElementById("manualSelectionBar")?.classList.remove("show");
-    setSelectionBarMode(false);
-    document.getElementById("adminScreen")?.classList.add("show");
-    document.body.style.overflow="hidden";
-    adminTab("stocks");
-  });
 }
