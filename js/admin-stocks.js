@@ -37,15 +37,63 @@ function refreshStocks(){
   });
 }
 function stockRecordsFromDesigns(){
+  /*
+   * Google Sheets is the source of truth for actual stock quantities.
+   * designs.json is only used to enrich rows with image/price and to show
+   * zero-stock variants that exist in the catalogue.
+   *
+   * This is intentionally resilient: if designs.json is temporarily
+   * unavailable, existing Google Sheet stock rows are still displayed.
+   */
   const records=[];
-  (designs||[]).forEach(d=>{
-    (d.variants||[]).forEach((v,vi)=>{
-      const r=getStockRecord(d.name,v.size);
-      records.push({design:d.name,image:d.image,size:v.size,price:Number(v.price)||0,variantIndex:vi,stock:stockDisplayQuantity(r),needToPrepare:stockNeedQuantity(r)});
+  const seen=new Set();
+  const catalogue=Array.isArray(designs)?designs:[];
+
+  catalogue.forEach(d=>{
+    (Array.isArray(d.variants)?d.variants:[]).forEach((v,vi)=>{
+      const design=String(d.name||'').trim();
+      const size=String(v.size||'').trim();
+      if(!design||!size)return;
+      const key=stockKey(design,size);
+      const r=getStockRecord(design,size);
+      seen.add(key);
+      records.push({
+        design,
+        image:String(d.image||r.image||''),
+        size,
+        price:Number(v.price)||0,
+        variantIndex:vi,
+        stock:stockDisplayQuantity(r),
+        needToPrepare:stockNeedQuantity(r)
+      });
     });
   });
+
+  /* Add stock rows that exist in Google Sheets but are not present in the
+     currently loaded designs.json. This fixes the "No designs found" case
+     on Available Stocks and also makes the page reflect real sheet data. */
+  adminStocks.forEach(r=>{
+    const design=String(r.design||'').trim();
+    const size=String(r.size||'').trim();
+    if(!design||!size)return;
+    const key=stockKey(design,size);
+    if(seen.has(key))return;
+
+    records.push({
+      design,
+      image:String(r.image||''),
+      size,
+      price:0,
+      variantIndex:-1,
+      stock:stockDisplayQuantity(r),
+      needToPrepare:stockNeedQuantity(r)
+    });
+    seen.add(key);
+  });
+
   return records;
 }
+
 function renderStocks(){
   const needBox=document.getElementById("needToPrepareGrid");
   const needEmpty=document.getElementById("needToPrepareEmpty");
