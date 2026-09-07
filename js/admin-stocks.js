@@ -183,3 +183,260 @@ function processStockSave(design,size,key){
     else renderStocks();
   });
 }
+
+/* =========================================================
+   PRINT ALL DESIGNS
+   Prints: Design Name + Image + Size + Price
+   ========================================================= */
+function printAllDesigns() {
+  if (!Array.isArray(designs) || !designs.length) {
+    alert("Designs are not loaded yet. Please wait and try again.");
+    return;
+  }
+
+  const printWindow = window.open("", "_blank", "width=1200,height=900");
+
+  if (!printWindow) {
+    alert("Please allow pop-ups for this website to print the designs.");
+    return;
+  }
+
+  const cards = designs.map((design, index) => {
+    const variants = Array.isArray(design.variants)
+      ? design.variants
+      : [];
+
+    const image = design.image
+      ? new URL(design.image, window.location.href).href
+      : "";
+
+    const designName =
+      design.name ||
+      design.design ||
+      `Design ${index + 1}`;
+
+    const variantHTML = variants.map(v => `
+      <div class="variant-row">
+        <span>${escapePrintText(v.size || "")}</span>
+        <strong>
+          ₹${Number(v.price || 0).toLocaleString("en-IN")}
+        </strong>
+      </div>
+    `).join("");
+
+    return `
+      <div class="design-card">
+
+        <div class="design-name">
+          ${escapePrintText(designName)}
+        </div>
+
+        <div class="design-image">
+          ${
+            image
+              ? `<img src="${image}" alt="">`
+              : `<span>No Image</span>`
+          }
+        </div>
+
+        ${
+          variants.length
+            ? `<div class="variant-list">
+                ${variantHTML}
+               </div>`
+            : ""
+        }
+
+      </div>
+    `;
+  }).join("");
+
+  printWindow.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Swapnali's Rangoli - Designs</title>
+
+<style>
+
+@page {
+  size: A4 portrait;
+  margin: 10mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+  color: #222;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.print-header {
+  text-align: center;
+  margin-bottom: 12px;
+  padding-bottom: 7px;
+  border-bottom: 2px solid #222;
+}
+
+.print-header h1 {
+  margin: 0;
+  font-size: 21px;
+}
+
+.print-header p {
+  margin: 3px 0 0;
+  font-size: 10px;
+}
+
+.design-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7mm 5mm;
+}
+
+.design-card {
+  border: 1px solid #222;
+  border-radius: 5px;
+  padding: 5px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.design-name {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.design-image {
+  width: 100%;
+  height: 48mm;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.design-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.design-image span {
+  font-size: 10px;
+  color: #777;
+}
+
+.variant-list {
+  margin-top: 5px;
+  border-top: 1px solid #222;
+}
+
+.variant-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 4px;
+  font-size: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.variant-row:last-child {
+  border-bottom: none;
+}
+
+.variant-row strong {
+  font-weight: 700;
+}
+
+@media print {
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .design-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="print-header">
+  <h1>Swapnali's Rangoli</h1>
+  <p>Design Catalogue</p>
+</div>
+
+<div class="design-grid">
+  ${cards}
+</div>
+
+<script>
+
+function printWhenReady() {
+
+  const images = Array.from(document.images);
+
+  if (!images.length) {
+    window.print();
+    return;
+  }
+
+  let loaded = 0;
+
+  function done() {
+    loaded++;
+
+    if (loaded === images.length) {
+      setTimeout(function() {
+        window.print();
+      }, 300);
+    }
+  }
+
+  images.forEach(function(img) {
+
+    if (img.complete) {
+      done();
+    } else {
+      img.onload = done;
+      img.onerror = done;
+    }
+
+  });
+}
+
+window.onload = printWhenReady;
+
+<\/script>
+
+</body>
+</html>
+  `);
+
+  printWindow.document.close();
+}
+
+
+function escapePrintText(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}

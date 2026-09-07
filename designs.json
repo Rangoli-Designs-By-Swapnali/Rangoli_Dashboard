@@ -971,4 +971,26 @@
       }
     ]
 }
+,
+{
+    "design": "Design76",
+    "image": "Design76.png",
+    "variants": [
+      {
+        "size": "16 inch (Full set)",
+        "price": 300 
+      }
+    ]
+}
+,
+{
+    "design": "Design77",
+    "image": "Design77.png",
+    "variants": [
+      {
+        "size": "Regular(30/pc) ",
+        "price": 30
+      }
+    ]
+}
 ]
