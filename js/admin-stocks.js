@@ -188,78 +188,301 @@ function processStockSave(design,size,key){
    PRINT ALL DESIGNS
    Prints: Design Name + Image + Size + Price
    ========================================================= */
-function printAllDesigns() {
+/* =========================================================
+   PRINT ALL DESIGNS
+   Layout:
+   IMAGE | DESIGN NAME | SIZE | PRICE
+   ========================================================= */
+
+async function printAllDesigns() {
+
   if (!Array.isArray(designs) || !designs.length) {
     alert("Designs are not loaded yet. Please wait and try again.");
     return;
   }
 
-  const printWindow = window.open("", "_blank", "width=1200,height=900");
+  const printWindow = window.open(
+    "",
+    "_blank",
+    "width=1200,height=900"
+  );
 
   if (!printWindow) {
     alert("Please allow pop-ups for this website to print the designs.");
     return;
   }
 
-  const cards = designs.map((design, index) => {
+  /* Show loading message while images are prepared */
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Preparing Designs...</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          margin: 0;
+        }
+
+        .loading {
+          text-align: center;
+          font-size: 18px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="loading">
+        Preparing design images for printing...<br>
+        Please wait.
+      </div>
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+
+  /*
+   * Convert an image URL to a data URL.
+   * This embeds the actual image inside the print document.
+   */
+  async function imageToDataURL(url) {
+
+    if (!url) return "";
+
+    try {
+
+      const response = await fetch(url, {
+        cache: "no-store"
+      });
+
+      if (!response.ok) {
+        throw new Error("Image request failed");
+      }
+
+      const blob = await response.blob();
+
+      return await new Promise((resolve, reject) => {
+
+        const reader = new FileReader();
+
+        reader.onloadend = function () {
+          resolve(reader.result);
+        };
+
+        reader.onerror = reject;
+
+        reader.readAsDataURL(blob);
+
+      });
+
+    } catch (error) {
+
+      console.warn(
+        "Could not load image:",
+        url,
+        error
+      );
+
+      return "";
+
+    }
+  }
+
+
+  /*
+   * Prepare every design image before opening
+   * the final print layout.
+   */
+  const preparedDesigns = [];
+
+  for (const design of designs) {
+
     const variants = Array.isArray(design.variants)
       ? design.variants
       : [];
 
-    const image = design.image
-      ? new URL(design.image, window.location.href).href
-      : "";
-
     const designName =
       design.name ||
       design.design ||
-      `Design ${index + 1}`;
+      "";
 
-    const variantHTML = variants.map(v => `
-      <div class="variant-row">
-        <span>${escapePrintText(v.size || "")}</span>
-        <strong>
-          ₹${Number(v.price || 0).toLocaleString("en-IN")}
-        </strong>
-      </div>
-    `).join("");
+    let imageURL = design.image || "";
+
+    /*
+     * Resolve relative image paths correctly.
+     */
+    if (imageURL) {
+
+      try {
+
+        imageURL = new URL(
+          imageURL,
+          window.location.href
+        ).href;
+
+      } catch (e) {
+
+        console.warn(
+          "Invalid image path:",
+          imageURL
+        );
+
+      }
+    }
+
+    /*
+     * Convert image to embedded data URL.
+     */
+    const imageData = imageURL
+      ? await imageToDataURL(imageURL)
+      : "";
+
+    preparedDesigns.push({
+      name: designName,
+      image: imageData,
+      variants: variants
+    });
+  }
+
+
+  /*
+   * Build print cards.
+   */
+  const cards = preparedDesigns.map((design, index) => {
+
+    const variants = design.variants || [];
+
+    let variantRows = "";
+
+    if (variants.length) {
+
+      variantRows = variants.map(v => {
+
+        const size = escapePrintText(
+          v.size || ""
+        );
+
+        const price = Number(
+          v.price || 0
+        ).toLocaleString("en-IN");
+
+        return `
+          <div class="variant-row">
+
+            <div class="size-cell">
+              ${size}
+            </div>
+
+            <div class="price-cell">
+              ₹${price}
+            </div>
+
+          </div>
+        `;
+
+      }).join("");
+
+    } else {
+
+      variantRows = `
+        <div class="variant-row">
+
+          <div class="size-cell">
+            —
+          </div>
+
+          <div class="price-cell">
+            —
+          </div>
+
+        </div>
+      `;
+    }
+
 
     return `
       <div class="design-card">
 
-        <div class="design-name">
-          ${escapePrintText(designName)}
-        </div>
+        <!-- IMAGE -->
+        <div class="image-cell">
 
-        <div class="design-image">
           ${
-            image
-              ? `<img src="${image}" alt="">`
-              : `<span>No Image</span>`
+            design.image
+              ? `
+                <img
+                  src="${design.image}"
+                  alt=""
+                  class="design-image"
+                >
+              `
+              : `
+                <div class="no-image">
+                  No Image
+                </div>
+              `
           }
+
         </div>
 
-        ${
-          variants.length
-            ? `<div class="variant-list">
-                ${variantHTML}
-               </div>`
-            : ""
-        }
+
+        <!-- DESIGN NAME -->
+        <div class="design-info">
+
+          <div class="design-name">
+            ${escapePrintText(design.name)}
+          </div>
+
+
+          <!-- SIZE / PRICE -->
+          <div class="variant-table">
+
+            <div class="variant-header">
+
+              <div>
+                Size
+              </div>
+
+              <div>
+                Price
+              </div>
+
+            </div>
+
+            ${variantRows}
+
+          </div>
+
+        </div>
 
       </div>
     `;
+
   }).join("");
 
-  printWindow.document.write(`
+
+  /*
+   * Final print document.
+   */
+  const html = `
 <!DOCTYPE html>
+
 <html>
+
 <head>
 
 <meta charset="UTF-8">
+
 <title>Swapnali's Rangoli - Designs</title>
 
 <style>
+
+/* =========================
+   PAGE
+   ========================= */
 
 @page {
   size: A4 portrait;
@@ -270,23 +493,31 @@ function printAllDesigns() {
   box-sizing: border-box;
 }
 
+html,
 body {
   margin: 0;
-  background: #fff;
-  color: #222;
+  padding: 0;
+  background: #ffffff;
+  color: #111111;
   font-family: Arial, Helvetica, sans-serif;
 }
 
+
+/* =========================
+   HEADER
+   ========================= */
+
 .print-header {
   text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   padding-bottom: 7px;
-  border-bottom: 2px solid #222;
+  border-bottom: 2px solid #111;
 }
 
 .print-header h1 {
   margin: 0;
-  font-size: 21px;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .print-header p {
@@ -294,149 +525,332 @@ body {
   font-size: 10px;
 }
 
+
+/* =========================
+   DESIGN GRID
+   ========================= */
+
 .design-grid {
+
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 7mm 5mm;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 6mm;
+
 }
+
+
+/* =========================
+   DESIGN CARD
+   ========================= */
 
 .design-card {
+
+  display: grid;
+
+  grid-template-columns:
+    35mm minmax(0, 1fr);
+
+  min-height: 38mm;
+
   border: 1px solid #222;
-  border-radius: 5px;
-  padding: 5px;
+
+  border-radius: 4px;
+
+  overflow: hidden;
+
+  background: #fff;
+
   break-inside: avoid;
+
   page-break-inside: avoid;
+
 }
 
-.design-name {
-  text-align: center;
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 5px;
+
+/* =========================
+   IMAGE
+   ========================= */
+
+.image-cell {
+
+  width: 35mm;
+
+  height: 38mm;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  overflow: hidden;
+
+  background: #fff;
+
+  border-right: 1px solid #ddd;
+
 }
+
 
 .design-image {
-  width: 100%;
-  height: 48mm;
-  border: 1px solid #ddd;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
 
-.design-image img {
+  display: block;
+
   width: 100%;
+
   height: 100%;
+
   object-fit: contain;
+
 }
 
-.design-image span {
-  font-size: 10px;
+
+.no-image {
+
+  font-size: 9px;
+
   color: #777;
+
+  text-align: center;
+
 }
 
-.variant-list {
-  margin-top: 5px;
-  border-top: 1px solid #222;
+
+/* =========================
+   DESIGN INFORMATION
+   ========================= */
+
+.design-info {
+
+  min-width: 0;
+
+  padding: 5px;
+
 }
+
+
+/* =========================
+   DESIGN NAME
+   ========================= */
+
+.design-name {
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  margin-bottom: 5px;
+
+  line-height: 1.2;
+
+  word-break: break-word;
+
+}
+
+
+/* =========================
+   SIZE / PRICE TABLE
+   ========================= */
+
+.variant-table {
+
+  width: 100%;
+
+  border-top: 1px solid #222;
+
+}
+
+
+.variant-header,
+.variant-row {
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    24mm;
+
+}
+
+
+.variant-header {
+
+  font-size: 9px;
+
+  font-weight: 700;
+
+  border-bottom: 1px solid #aaa;
+
+}
+
+
+.variant-header div {
+
+  padding: 3px;
+
+}
+
+
+.variant-header div:last-child {
+
+  text-align: right;
+
+}
+
 
 .variant-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 3px 4px;
-  font-size: 10px;
+
+  font-size: 9px;
+
   border-bottom: 1px solid #ddd;
+
 }
+
 
 .variant-row:last-child {
+
   border-bottom: none;
+
 }
 
-.variant-row strong {
-  font-weight: 700;
+
+.size-cell {
+
+  padding: 3px;
+
+  word-break: break-word;
+
 }
+
+
+.price-cell {
+
+  padding: 3px;
+
+  text-align: right;
+
+  font-weight: 700;
+
+  white-space: nowrap;
+
+}
+
+
+/* =========================
+   PRINT
+   ========================= */
 
 @media print {
 
+  html,
   body {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+
+    background: #fff;
+
   }
 
   .design-grid {
-    grid-template-columns: repeat(3, 1fr);
+
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+  }
+
+  .design-card {
+
+    break-inside: avoid;
+
+    page-break-inside: avoid;
+
   }
 
 }
 
 </style>
+
 </head>
+
 
 <body>
 
+
 <div class="print-header">
+
   <h1>Swapnali's Rangoli</h1>
-  <p>Design Catalogue</p>
+
+  <p>
+    Design Catalogue
+  </p>
+
 </div>
 
+
 <div class="design-grid">
+
   ${cards}
+
 </div>
+
 
 <script>
 
-function printWhenReady() {
+/*
+ * All images are already embedded as data URLs,
+ * so there is no external image loading problem.
+ */
 
-  const images = Array.from(document.images);
+window.onload = function () {
 
-  if (!images.length) {
+  setTimeout(function () {
+
+    window.focus();
+
     window.print();
-    return;
-  }
 
-  let loaded = 0;
+  }, 500);
 
-  function done() {
-    loaded++;
-
-    if (loaded === images.length) {
-      setTimeout(function() {
-        window.print();
-      }, 300);
-    }
-  }
-
-  images.forEach(function(img) {
-
-    if (img.complete) {
-      done();
-    } else {
-      img.onload = done;
-      img.onerror = done;
-    }
-
-  });
-}
-
-window.onload = printWhenReady;
+};
 
 <\/script>
 
+
 </body>
+
 </html>
-  `);
+  `;
+
+
+  /*
+   * Replace loading page with final print page.
+   */
+  printWindow.document.open();
+
+  printWindow.document.write(html);
 
   printWindow.document.close();
+
 }
 
 
+/* =========================================================
+   ESCAPE PRINT TEXT
+   ========================================================= */
+
 function escapePrintText(value) {
+
   return String(value ?? "")
+
     .replace(/&/g, "&amp;")
+
     .replace(/</g, "&lt;")
+
     .replace(/>/g, "&gt;")
+
     .replace(/"/g, "&quot;")
+
     .replace(/'/g, "&#039;");
+
 }
