@@ -75,7 +75,7 @@
     "variants": [
       {
         "size": "Regular",
-        "price": 30
+        "price": 40
       }
     ]
   },
@@ -267,7 +267,7 @@
     "variants": [
       {
         "size": "16 inch",
-        "price": 200
+        "price": 250
       }
     ]
   }
@@ -277,11 +277,11 @@
     "variants": [
       {
         "size": "3 feet",
-        "price": 350
+        "price": 400
       },
 	  {
         "size": "16 inch (150/pc)",
-        "price": 150
+        "price": 200
       }
     ]
 }
@@ -334,7 +334,7 @@
     "variants": [
       {
         "size": "16 inch (3 pc Combo)",
-        "price": 500 
+        "price": 550 
       }
     ]
 }
@@ -345,7 +345,7 @@
     "variants": [
       {
         "size": "32 inch",
-        "price": 350 
+        "price": 400 
       }
     ]
 }
@@ -356,7 +356,7 @@
     "variants": [
       {
         "size": "32 inch",
-        "price": 350 
+        "price": 400 
       }
     ]
 }
@@ -367,7 +367,7 @@
     "variants": [
       {
         "size": "3 feet",
-        "price": 350 
+        "price": 500 
       }
     ]
 }
@@ -651,7 +651,7 @@
     "variants": [
       {
         "size": "A3 Regular",
-        "price": 350 
+        "price": 400 
       }
     ]
 }
@@ -791,7 +791,7 @@
     "variants": [
       {
         "size": "32 inch",
-        "price": 350 
+        "price": 400 
       }
     ]
 }
@@ -901,7 +901,7 @@
     "variants": [
       {
         "size": "11.5 inch",
-        "price": 150 
+        "price": 180 
       }
     ]
 }
@@ -940,6 +940,34 @@
       {
         "size": "Regular",
         "price": 250 
+      }
+    ]
+}
+,{
+    "design": "Design74",
+    "image": "Design74.png",
+    "variants": [
+      {
+        "size": "3 feet",
+        "price": 500
+      },
+	  {
+        "size": "16 inch (250/pc)",
+        "price": 250
+      }
+    ]
+}
+,{
+    "design": "Design75",
+    "image": "Design75.png",
+    "variants": [
+      {
+        "size": "3 feet",
+        "price": 500
+      },
+	  {
+        "size": "16 inch (250/pc)",
+        "price": 250
       }
     ]
 }
