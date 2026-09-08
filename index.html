@@ -418,7 +418,30 @@
           <div class="admin-field"><label>Shipping Charges</label><input id="newShipping" type="number" min="0" value="0" oninput="syncNewOrderTotals()"></div>
           <div class="admin-field"><label>Discount Amount</label><input id="newDiscount" type="number" min="0" step="0.01" value="0" oninput="syncNewOrderTotals()"></div>
           <div class="admin-field"><label>Payment Status</label><select id="newPayment" onchange="handleNewPaymentChange()"><option>Pending</option><option>Advanced Received</option><option>Paid</option><option>Partially Paid</option><option>COD</option></select></div>
-          <div class="admin-field" id="newAdvancePaymentFields" style="display:none"><label>Advance Received Amount</label><input id="newAdvanceAmount" type="number" min="0" step="0.01" placeholder="Amount received" oninput="syncNewAdvanceFromAmount()"><div id="newAdvanceSummary" class="admin-mini advance-summary"></div></div>
+          <div
+  class="admin-field"
+  id="newAdvancePaymentFields"
+  style="display:none"
+>
+  <label>Advance Received Amount</label>
+
+  <input
+    id="newAdvanceAmount"
+    type="number"
+    min="0"
+    step="0.01"
+    inputmode="decimal"
+    placeholder="Amount received"
+    oninput="syncNewAdvanceFromAmount()"
+    onblur="normalizeNewAdvanceAmount()"
+  >
+
+  <div
+    id="newAdvanceSummary"
+    class="admin-mini"
+    style="margin-top:5px"
+  ></div>
+</div>
           <div class="admin-field"><label>Order Status</label><select id="newStatus"><option>New</option><option>Confirmed</option><option>Dispatched</option><option>Delivered</option><option>Cancelled</option></select></div>
           <div class="admin-field admin-full"><label>Notes</label><textarea id="newNotes" placeholder="Shipping details, customer requests, payment notes..."></textarea></div>
         </div>
