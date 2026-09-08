@@ -27,7 +27,11 @@ function renderOrdersTable(){
   const st=document.getElementById("orderStatusFilter")?.value||"";
   const month=document.getElementById("orderMonthFilter")?.value||"";
   const pay=document.getElementById("orderPaymentFilter")?.value||"";
-  let list=filterByMonth(adminOrders,month).filter(o=>!st||o.status===st).filter(o=>!pay||o.payment===pay).filter(o=>!q||[o.orderNo,o.customerName,o.phone,o.address,...(o.items||[]).flatMap(i=>[i.design,i.size])].join(" ").toLowerCase().includes(q)).sort((a,b)=>orderDateKey(b).localeCompare(orderDateKey(a))||new Date(b.createdAt)-new Date(a.createdAt));
+  let list=filterByMonth(adminOrders,month)
+  .filter(o=>!st||o.status===st)
+  .filter(o=>!pay||o.payment===pay)
+  .filter(o=>!q||[o.orderNo,o.customerName,o.phone,o.address,...(o.items||[]).flatMap(i=>[i.design,i.size])].join(" ").toLowerCase().includes(q))
+  .sort((a,b)=>String(b.id||"").localeCompare(String(a.id||""),undefined,{numeric:true}));
   document.getElementById("ordersTable").innerHTML=renderOrderTableHTML(list,true)||"<div class='empty-admin'>No matching orders.</div>";
 }
 function changeOrderStatus(id,status){
