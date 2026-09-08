@@ -77,7 +77,7 @@ body{font-family:Arial,sans-serif;padding:25px;color:#3d2030}.invoice-box{max-wi
    COMPACT INVOICE CARDS
 ========================================================= */
 .invoice-card{padding:8px 10px!important;min-height:0!important}
-.invoice-card-line{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10px;line-height:1.35;color:#6f1d45}
+.invoice-card-line{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight: bold;font-size:15px;line-height:1.35;color:#6f1d45}
 .invoice-card-line strong{color:#5b1738;font-size:11px}
 .invoice-card-line + .invoice-card-line{margin-top:5px}
 .invoice-card .status-pill{font-size:8px;padding:3px 6px;white-space:nowrap}
@@ -137,7 +137,7 @@ body{font-family:Arial,sans-serif;padding:25px;color:#3d2030}.invoice-box{max-wi
 @media(max-width:560px){
   .stock-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
   .stock-toolbar input,.stock-toolbar select{min-width:100%}
-  .invoice-card-line{font-size:9px}
+  .invoice-card-line{font-size:10px}
 }
 @media(max-width:360px){
   .stock-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
