@@ -186,196 +186,420 @@ function processStockSave(design,size,key){
 
 /* =========================================================
    PRINT ALL DESIGNS
-   MAIN-PAGE STYLE CARDS
-   A4 = 4 CARDS PER PAGE
-   2 COLUMNS × 2 ROWS
+   3 COLUMNS × 3 ROWS
+   9 DESIGN CARDS PER A4 PAGE
+
+   PRINT CONTENT:
+   - Actual Rangoli image
+   - Design name
+   - Size
+   - Price
+
+   DOES NOT PRINT:
+   - Checkbox
+   - Quantity counter
+   - Add to cart
+   - Stock
+   - Buttons
 ========================================================= */
 
 async function printAllDesigns() {
 
-  if (!Array.isArray(designs) || !designs.length) {
-    alert("Designs are not loaded yet. Please wait and try again.");
+  /* =======================================================
+     CHECK DESIGNS
+  ======================================================= */
+
+  if (
+    !Array.isArray(designs) ||
+    !designs.length
+  ) {
+
+    alert(
+      "Designs are not loaded yet. Please wait and try again."
+    );
+
     return;
   }
 
-  const printWindow = window.open(
-    "",
-    "_blank",
-    "width=1200,height=900"
-  );
+
+  /* =======================================================
+     OPEN PRINT WINDOW
+  ======================================================= */
+
+  const printWindow =
+    window.open(
+      "",
+      "_blank",
+      "width=1200,height=900"
+    );
+
 
   if (!printWindow) {
-    alert("Please allow pop-ups for this website to print the designs.");
+
+    alert(
+      "Please allow pop-ups for this website to print the designs."
+    );
+
     return;
   }
 
+
+  /* =======================================================
+     SHOW LOADING SCREEN
+  ======================================================= */
+
+  printWindow.document.open();
+
   printWindow.document.write(`
+
     <!DOCTYPE html>
+
     <html>
+
     <head>
-      <title>Preparing Designs...</title>
+
+      <meta charset="UTF-8">
+
+      <title>
+        Preparing Designs...
+      </title>
+
       <style>
+
+        html,
         body {
+
           margin: 0;
-          font-family: Arial, sans-serif;
+
+          width: 100%;
+
+          height: 100%;
+
+          font-family:
+            Arial,
+            Helvetica,
+            sans-serif;
+
+        }
+
+        body {
+
           display: flex;
+
           align-items: center;
+
           justify-content: center;
-          height: 100vh;
+
+          background: #fff;
+
         }
 
         .loading {
+
           text-align: center;
+
           font-size: 18px;
+
           font-weight: 600;
+
         }
+
       </style>
+
     </head>
+
 
     <body>
 
       <div class="loading">
-        Preparing design images...<br>
+
+        Preparing design images...
+
+        <br>
+
         Please wait.
+
       </div>
 
     </body>
+
     </html>
+
   `);
 
   printWindow.document.close();
 
 
-  /* =========================================================
+  /* =======================================================
      IMAGE PATH
-  ========================================================= */
+     
+     designs.json can contain:
+     
+       Design1.png
+       ./Design1.png
+       images/Design1.png
+       Images/Design1.png
+       Rangoli_Dashboard/images/Design1.png
+     
+     We convert all of them to:
+     
+       images/Design1.png
+  ======================================================= */
 
-  function getActualDesignImagePath(imageValue) {
+  function getActualDesignImagePath(
+    imageValue
+  ) {
 
-    if (!imageValue) return "";
+    if (!imageValue) {
 
-    let value = String(imageValue).trim();
+      return "";
 
-    if (!value) return "";
+    }
 
-    /*
-     * Full URL / data URL
-     */
+
+    let value =
+      String(imageValue).trim();
+
+
+    if (!value) {
+
+      return "";
+
+    }
+
+
+    /* Full URL */
+
     if (
       value.startsWith("http://") ||
       value.startsWith("https://") ||
       value.startsWith("data:")
     ) {
+
       return value;
+
     }
 
-    /*
-     * Clean path
-     */
-    value = value
-      .replace(/^\.\/+/, "")
-      .replace(/^\/+/, "")
-      .replace(/^Rangoli_Dashboard[\\/]+/i, "")
-      .replace(/^images[\\/]+/i, "")
-      .replace(/^Images[\\/]+/i, "")
-      .replace(/\\/g, "/");
+
+    /* Remove leading ./ */
+
+    value =
+      value.replace(
+        /^\.\/+/,
+        ""
+      );
+
+
+    /* Remove leading / */
+
+    value =
+      value.replace(
+        /^\/+/,
+        ""
+      );
+
+
+    /* Remove Rangoli_Dashboard */
+
+    value =
+      value.replace(
+        /^Rangoli_Dashboard[\\/]+/i,
+        ""
+      );
+
+
+    /* Remove images folder */
+
+    value =
+      value.replace(
+        /^images[\\/]+/i,
+        ""
+      );
+
+
+    value =
+      value.replace(
+        /^Images[\\/]+/i,
+        ""
+      );
+
+
+    /* Windows path → web path */
+
+    value =
+      value.replace(
+        /\\/g,
+        "/"
+      );
+
 
     /*
      * Use only filename.
      */
-    const parts = value.split("/");
+
+    const parts =
+      value.split("/");
+
 
     const filename =
       parts[parts.length - 1];
 
-    return "images/" +
-      encodeURIComponent(filename);
+
+    /*
+     * Encode filename.
+     */
+
+    return (
+      "images/" +
+      encodeURIComponent(filename)
+    );
+
   }
 
 
-  /* =========================================================
+  /* =======================================================
      IMAGE → DATA URL
-  ========================================================= */
+     
+     Embedding the images prevents the print preview
+     from showing "No Image".
+  ======================================================= */
 
-  async function imageToDataURL(url) {
+  async function imageToDataURL(
+    url
+  ) {
 
-    if (!url) return "";
+    if (!url) {
+
+      return "";
+
+    }
+
 
     try {
 
-      const response = await fetch(
-        url + (url.includes("?") ? "&" : "?") + "print=1",
-        {
-          cache: "no-store"
-        }
-      );
+      const response =
+        await fetch(
+          url +
+          (
+            url.includes("?")
+              ? "&"
+              : "?"
+          ) +
+          "print=1",
+          {
+            cache: "no-store"
+          }
+        );
+
 
       if (!response.ok) {
+
         throw new Error(
           "Image request failed: " +
           response.status
         );
+
       }
+
 
       const blob =
         await response.blob();
 
+
       return await new Promise(
-        function(resolve, reject) {
+        function(
+          resolve,
+          reject
+        ) {
 
           const reader =
             new FileReader();
 
+
           reader.onload =
             function() {
-              resolve(reader.result);
+
+              resolve(
+                reader.result
+              );
+
             };
 
-          reader.onerror =
-            reject;
 
-          reader.readAsDataURL(blob);
+          reader.onerror =
+            function(error) {
+
+              reject(error);
+
+            };
+
+
+          reader.readAsDataURL(
+            blob
+          );
 
         }
       );
 
-    } catch (error) {
+    }
+
+    catch (error) {
 
       console.warn(
-        "Could not load image:",
+        "Could not load print image:",
         url,
         error
       );
 
       return "";
+
     }
+
   }
 
 
-  /* =========================================================
-     PREPARE DESIGNS
-  ========================================================= */
+  /* =======================================================
+     PREPARE ALL DESIGN IMAGES
+  ======================================================= */
 
   const preparedDesigns = [];
 
-  for (const design of designs) {
+
+  for (
+    const design of designs
+  ) {
 
     const designName =
       design.name ||
       design.design ||
       "";
 
+
     const variants =
-      Array.isArray(design.variants)
+      Array.isArray(
+        design.variants
+      )
         ? design.variants
         : [];
+
+
+    /*
+     * Get actual image path.
+     */
 
     const imagePath =
       getActualDesignImagePath(
         design.image
       );
 
+
     let imageData = "";
+
+
+    /*
+     * First attempt:
+     * images/filename
+     */
 
     if (imagePath) {
 
@@ -383,45 +607,111 @@ async function printAllDesigns() {
         await imageToDataURL(
           imagePath
         );
+
     }
 
+
     /*
-     * Try Images/ as fallback
+     * Second attempt:
+     * Images/filename
      */
-    if (!imageData && imagePath) {
+
+    if (
+      !imageData &&
+      imagePath
+    ) {
 
       imageData =
         await imageToDataURL(
+
           imagePath.replace(
             /^images\//,
             "Images/"
           )
+
         );
+
     }
+
+
+    /*
+     * Save prepared design.
+     */
 
     preparedDesigns.push({
 
-      name: designName,
+      name:
+        designName,
 
-      image: imageData,
+      image:
+        imageData,
 
-      imagePath: imagePath,
+      imagePath:
+        imagePath,
 
-      variants: variants
+      variants:
+        variants
 
     });
+
   }
 
 
-  /* =========================================================
-     CREATE VARIANT ROWS
-  ========================================================= */
+  /* =======================================================
+     ESCAPE TEXT FOR HTML
+  ======================================================= */
 
-  function createVariantRows(variants) {
+  function escapePrintText(
+    value
+  ) {
 
-    if (!variants.length) {
+    return String(
+      value ?? ""
+    )
+
+      .replace(
+        /&/g,
+        "&amp;"
+      )
+
+      .replace(
+        /</g,
+        "&lt;"
+      )
+
+      .replace(
+        />/g,
+        "&gt;"
+      )
+
+      .replace(
+        /"/g,
+        "&quot;"
+      )
+
+      .replace(
+        /'/g,
+        "&#039;"
+      );
+
+  }
+
+
+  /* =======================================================
+     CREATE SIZE / PRICE ROWS
+  ======================================================= */
+
+  function createVariantRows(
+    variants
+  ) {
+
+    if (
+      !Array.isArray(variants) ||
+      !variants.length
+    ) {
 
       return `
+
         <div class="variant-row">
 
           <div class="variant-size">
@@ -433,147 +723,232 @@ async function printAllDesigns() {
           </div>
 
         </div>
+
       `;
+
     }
 
 
-    return variants.map(
-      function(v) {
+    return variants
+      .map(
+        function(variant) {
 
-        const size =
-          escapePrintText(
-            v.size || "Standard"
-          );
-
-        const priceNumber =
-          Number(
-            String(
-              v.price ?? 0
-            )
-              .replace(/,/g, "")
-              .replace(/[₹$]/g, "")
-              .trim()
-          ) || 0;
-
-        const price =
-          priceNumber.toLocaleString(
-            "en-IN"
-          );
-
-        return `
-
-          <div class="variant-row">
-
-            <div class="variant-size">
-              ${size}
-            </div>
-
-            <div class="variant-price">
-              ₹${price}
-            </div>
-
-          </div>
-
-        `;
-
-      }
-    ).join("");
-  }
+          const size =
+            escapePrintText(
+              variant.size ||
+              "Standard"
+            );
 
 
-  /* =========================================================
-     CREATE PRINT CARDS
-  ========================================================= */
-
-  const cards =
-    preparedDesigns.map(
-      function(design) {
-
-        let imageHTML = "";
-
-
-        if (design.image) {
-
-          imageHTML = `
-
-            <img
-              src="${design.image}"
-              class="design-image"
-              alt=""
-            >
-
-          `;
-
-        } else {
-
-          imageHTML = `
-
-            <div class="image-missing">
-
-              Image not loaded
-
-            </div>
-
-          `;
-        }
+          const price =
+            Number(
+              String(
+                variant.price ?? 0
+              )
+                .replace(
+                  /,/g,
+                  ""
+                )
+                .replace(
+                  /[₹$]/g,
+                  ""
+                )
+                .trim()
+            ) || 0;
 
 
-        return `
+          return `
 
-          <div class="design-card">
+            <div class="variant-row">
 
-            <!-- IMAGE -->
-            <div class="card-image">
+              <div class="variant-size">
 
-              ${imageHTML}
-
-            </div>
-
-
-            <!-- DESIGN NAME -->
-            <div class="card-name">
-
-              ${escapePrintText(
-                design.name
-              )}
-
-            </div>
-
-
-            <!-- SIZE / PRICE -->
-            <div class="variant-table">
-
-              <div class="variant-header">
-
-                <div>
-                  Size
-                </div>
-
-                <div>
-                  Price
-                </div>
+                ${size}
 
               </div>
 
-              ${createVariantRows(
-                design.variants
-              )}
 
+              <div class="variant-price">
+
+                ₹${price.toLocaleString("en-IN")}
+
+              </div>
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+  }
+
+
+  /* =======================================================
+     CREATE ONE DESIGN CARD
+  ======================================================= */
+
+  function createDesignCard(
+    design
+  ) {
+
+    let imageHTML = "";
+
+
+    if (design.image) {
+
+      imageHTML = `
+
+        <img
+
+          src="${design.image}"
+
+          class="design-image"
+
+          alt=""
+
+        >
+
+      `;
+
+    }
+
+    else {
+
+      imageHTML = `
+
+        <div class="image-missing">
+
+          Image not loaded
+
+        </div>
+
+      `;
+
+    }
+
+
+    return `
+
+      <div class="design-card">
+
+
+        <!-- =============================================
+             RANGOLI IMAGE
+        ============================================== -->
+
+        <div class="card-image">
+
+          ${imageHTML}
+
+        </div>
+
+
+        <!-- =============================================
+             DESIGN NAME
+        ============================================== -->
+
+        <div class="card-name">
+
+          ${escapePrintText(
+            design.name
+          )}
+
+        </div>
+
+
+        <!-- =============================================
+             SIZE / PRICE
+        ============================================== -->
+
+        <div class="variant-table">
+
+
+          <div class="variant-header">
+
+            <div>
+              Size
+            </div>
+
+            <div>
+              Price
             </div>
 
           </div>
 
-        `;
+
+          ${createVariantRows(
+            design.variants
+          )}
+
+
+        </div>
+
+
+      </div>
+
+    `;
+
+  }
+
+
+  /* =======================================================
+     CREATE ALL CARDS
+  ======================================================= */
+
+  const cardArray =
+    preparedDesigns.map(
+      function(design) {
+
+        return createDesignCard(
+          design
+        );
 
       }
-    ).join("");
+    );
 
 
-  /* =========================================================
-     FINAL PRINT PAGE
-  ========================================================= */
+  /* =======================================================
+     CREATE 3 × 3 PAGES
+     
+     9 CARDS PER PAGE
+  ======================================================= */
 
-  const html = `
+  const pages = [];
+
+
+  for (
+    let i = 0;
+    i < cardArray.length;
+    i += 9
+  ) {
+
+    const pageCards =
+      cardArray.slice(
+        i,
+        i + 9
+      );
+
+
+    pages.push(`
+
+      <div class="print-page">
+
+        ${pageCards.join("")}
+
+      </div>
+
+    `);
+
+  }
+
+
+  /* =======================================================
+     FINAL PRINT HTML
+  ======================================================= */
+
+  const finalHTML = `
 
 <!DOCTYPE html>
 
@@ -583,25 +958,33 @@ async function printAllDesigns() {
 
 <meta charset="UTF-8">
 
+
 <title>
-  Swapnali's Rangoli - Design Catalogue
+
+  Swapnali's Rangoli -
+  Design Catalogue
+
 </title>
 
 
 <style>
 
 /* =========================================================
-   A4
+   A4 PAGE
 ========================================================= */
 
 @page {
 
   size: A4 portrait;
 
-  margin: 8mm;
+  margin: 6mm;
 
 }
 
+
+/* =========================================================
+   GLOBAL
+========================================================= */
 
 * {
 
@@ -617,6 +1000,8 @@ body {
 
   padding: 0;
 
+  width: 100%;
+
   background: #fff;
 
   color: #111;
@@ -630,94 +1015,31 @@ body {
 
 
 /* =========================================================
-   HEADER
-========================================================= */
+   PRINT PAGE
 
-.print-header {
+   A4:
+   3 COLUMNS
+   3 ROWS
 
-  text-align: center;
-
-  height: 12mm;
-
-  margin-bottom: 4mm;
-
-  border-bottom: 1px solid #ddd;
-
-}
-
-
-.print-header h1 {
-
-  margin: 0;
-
-  font-size: 18px;
-
-  font-weight: 700;
-
-}
-
-
-.print-header p {
-
-  margin: 2px 0 0;
-
-  font-size: 8px;
-
-}
-
-
-/* =========================================================
-   MAIN PRINT GRID
-
-   EXACTLY 2 COLUMNS
-   EXACTLY 2 ROWS PER PAGE
-========================================================= */
-
-.design-grid {
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-
-  grid-template-rows:
-    repeat(2, 1fr);
-
-  column-gap: 6mm;
-
-  row-gap: 6mm;
-
-  width: 100%;
-
-}
-
-
-/* =========================================================
-   EACH PRINT PAGE
-
-   4 CARDS:
-   2 × 2
+   TOTAL:
+   9 CARDS
 ========================================================= */
 
 .print-page {
 
   width: 100%;
 
-  height: calc(
-    297mm - 16mm - 16mm
-  );
+  height: 285mm;
 
   display: grid;
 
   grid-template-columns:
-    repeat(2, minmax(0, 1fr));
+    repeat(3, minmax(0, 1fr));
 
   grid-template-rows:
-    repeat(2, 1fr);
+    repeat(3, minmax(0, 1fr));
 
-  column-gap: 6mm;
-
-  row-gap: 6mm;
+  gap: 4mm;
 
   page-break-after: always;
 
@@ -725,6 +1047,11 @@ body {
 
 }
 
+
+/*
+ * Last page should not create
+ * an extra blank page.
+ */
 
 .print-page:last-child {
 
@@ -736,7 +1063,9 @@ body {
 
 
 /* =========================================================
-   CARD
+   DESIGN CARD
+
+   MAIN PAGE CARD STYLE
 ========================================================= */
 
 .design-card {
@@ -749,13 +1078,13 @@ body {
 
   min-height: 0;
 
+  padding: 3mm;
+
   border: 1px solid #d8d8d8;
 
-  border-radius: 10px;
+  border-radius: 8px;
 
   background: #fff;
-
-  padding: 5mm;
 
   display: flex;
 
@@ -771,14 +1100,20 @@ body {
 
 
 /* =========================================================
-   IMAGE
+   IMAGE AREA
+
+   IMAGE WILL FIT INSIDE THE CARD.
+
+   NOTHING IS CROPPED.
 ========================================================= */
 
 .card-image {
 
   width: 100%;
 
-  height: 55mm;
+  height: 58mm;
+
+  flex-shrink: 0;
 
   display: flex;
 
@@ -790,12 +1125,18 @@ body {
 
   background: #fff;
 
-  border-radius: 7px;
-
-  margin-bottom: 3mm;
+  border-radius: 5px;
 
 }
 
+
+/*
+ * IMPORTANT:
+ *
+ * contain = complete Rangoli visible
+ * no cropping
+ * no stretching
+ */
 
 .design-image {
 
@@ -807,8 +1148,14 @@ body {
 
   object-fit: contain;
 
+  object-position: center center;
+
 }
 
+
+/* =========================================================
+   IMAGE MISSING
+========================================================= */
 
 .image-missing {
 
@@ -822,7 +1169,9 @@ body {
 
   justify-content: center;
 
-  font-size: 10px;
+  text-align: center;
+
+  font-size: 8px;
 
   color: #888;
 
@@ -835,25 +1184,33 @@ body {
 
 .card-name {
 
-  font-size: 15px;
+  width: 100%;
+
+  margin-top: 2mm;
+
+  margin-bottom: 2mm;
+
+  font-size: 11px;
 
   font-weight: 700;
 
+  line-height: 1.15;
+
   text-align: center;
-
-  line-height: 1.2;
-
-  margin-bottom: 3mm;
 
   color: #222;
 
+  white-space: normal;
+
   word-break: break-word;
+
+  overflow: hidden;
 
 }
 
 
 /* =========================================================
-   VARIANT TABLE
+   SIZE / PRICE TABLE
 ========================================================= */
 
 .variant-table {
@@ -862,12 +1219,14 @@ body {
 
   border: 1px solid #ddd;
 
-  border-radius: 5px;
+  border-radius: 4px;
 
   overflow: hidden;
 
 }
 
+
+/* Header + Rows */
 
 .variant-header,
 .variant-row {
@@ -876,16 +1235,18 @@ body {
 
   grid-template-columns:
     minmax(0, 1fr)
-    28mm;
+    17mm;
 
 }
 
+
+/* Header */
 
 .variant-header {
 
   background: #f7f7f7;
 
-  font-size: 10px;
+  font-size: 7.5px;
 
   font-weight: 700;
 
@@ -896,7 +1257,9 @@ body {
 
 .variant-header div {
 
-  padding: 2.5mm 3mm;
+  padding:
+    1.5mm
+    2mm;
 
 }
 
@@ -908,9 +1271,11 @@ body {
 }
 
 
+/* Rows */
+
 .variant-row {
 
-  font-size: 10px;
+  font-size: 7.5px;
 
   border-bottom: 1px solid #eee;
 
@@ -926,7 +1291,9 @@ body {
 
 .variant-size {
 
-  padding: 2.5mm 3mm;
+  padding:
+    1.5mm
+    2mm;
 
   word-break: break-word;
 
@@ -935,7 +1302,9 @@ body {
 
 .variant-price {
 
-  padding: 2.5mm 3mm;
+  padding:
+    1.5mm
+    2mm;
 
   text-align: right;
 
@@ -947,7 +1316,7 @@ body {
 
 
 /* =========================================================
-   PRINT
+   PRINT SETTINGS
 ========================================================= */
 
 @media print {
@@ -961,19 +1330,24 @@ body {
 
     padding: 0;
 
-  }
-
-
-  .print-header {
-
-    break-inside: avoid;
+    background: #fff;
 
   }
 
 
   .print-page {
 
-    break-inside: avoid;
+    width: 100%;
+
+    height: 285mm;
+
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+
+    grid-template-rows:
+      repeat(3, minmax(0, 1fr));
+
+    gap: 4mm;
 
   }
 
@@ -987,7 +1361,22 @@ body {
   }
 
 
+  .card-image {
+
+    overflow: hidden;
+
+  }
+
+
   .design-image {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: contain;
+
+    object-position: center center;
 
     print-color-adjust: exact;
 
@@ -1005,63 +1394,93 @@ body {
 <body>
 
 
-<div class="print-header">
-
-  <h1>
-    Swapnali's Rangoli
-  </h1>
-
-  <p>
-    Design Catalogue
-  </p>
-
-</div>
-
-
-<div id="pages"></div>
+${pages.join("")}
 
 
 <script>
 
-const cardsHTML = \`${cards.replace(/`/g, "\\`")}\`;
+/* =========================================================
+   WAIT FOR ALL IMAGES
+========================================================= */
 
-const cardsPerPage = 4;
-
-const totalCards =
-  ${preparedDesigns.length};
-
-const pagesContainer =
-  document.getElementById("pages");
+window.addEventListener(
+  "load",
+  async function() {
 
 
-for (
-  let i = 0;
-  i < totalCards;
-  i += cardsPerPage
-) {
-
-  const page =
-    document.createElement("div");
-
-  page.className =
-    "print-page";
+    const images =
+      Array.from(
+        document.querySelectorAll(
+          ".design-image"
+        )
+      );
 
 
-  page.innerHTML =
-    cardsHTML
-      .split("<!-- CARD_SEPARATOR -->")
-      .join("");
+    /*
+     * Wait until every image is
+     * completely loaded.
+     */
+
+    await Promise.all(
+
+      images.map(
+        function(img) {
+
+          if (
+            img.complete &&
+            img.naturalWidth > 0
+          ) {
+
+            return Promise.resolve();
+
+          }
 
 
-  /*
-   * Cards are inserted from the
-   * prepared HTML below.
-   */
+          return new Promise(
+            function(resolve) {
 
-  pagesContainer.appendChild(page);
+              img.onload =
+                function() {
 
-}
+                  resolve();
 
+                };
+
+
+              img.onerror =
+                function() {
+
+                  resolve();
+
+                };
+
+            }
+          );
+
+        }
+      )
+
+    );
+
+
+    /*
+     * Extra delay allows browser
+     * to finish the A4 grid layout.
+     */
+
+    setTimeout(
+      function() {
+
+        window.focus();
+
+        window.print();
+
+      },
+      700
+    );
+
+  }
+);
 
 <\/script>
 
@@ -1073,106 +1492,9 @@ for (
   `;
 
 
-  /*
-   * The page construction above needs
-   * actual individual cards.
-   *
-   * Rebuild the pages directly here.
-   */
-
-  const cardArray =
-    preparedDesigns.map(
-      function(design) {
-
-        let imageHTML =
-          design.image
-            ? `
-              <img
-                src="${design.image}"
-                class="design-image"
-                alt=""
-              >
-            `
-            : `
-              <div class="image-missing">
-                Image not loaded
-              </div>
-            `;
-
-
-        return `
-
-          <div class="design-card">
-
-            <div class="card-image">
-              ${imageHTML}
-            </div>
-
-            <div class="card-name">
-              ${escapePrintText(
-                design.name
-              )}
-            </div>
-
-            <div class="variant-table">
-
-              <div class="variant-header">
-
-                <div>Size</div>
-
-                <div>Price</div>
-
-              </div>
-
-              ${createPrintVariantRows(
-                design.variants
-              )}
-
-            </div>
-
-          </div>
-
-        `;
-      }
-    );
-
-
-  /*
-   * Replace the empty page container
-   * with real 4-card pages.
-   */
-
-  const pages = [];
-
-  for (
-    let i = 0;
-    i < cardArray.length;
-    i += 4
-  ) {
-
-    pages.push(`
-
-      <div class="print-page">
-
-        ${cardArray
-          .slice(i, i + 4)
-          .join("")}
-
-      </div>
-
-    `);
-
-  }
-
-
-  const finalHTML =
-    html.replace(
-      '<div id="pages"></div>',
-      `<div id="pages">
-        ${pages.join("")}
-      </div>`
-    );
-
+  /* =======================================================
+     WRITE FINAL PRINT DOCUMENT
+  ======================================================= */
 
   printWindow.document.open();
 
@@ -1181,175 +1503,5 @@ for (
   );
 
   printWindow.document.close();
-
-
-  /*
-   * Wait for all images before printing.
-   */
-
-  setTimeout(
-    async function() {
-
-      const images =
-        Array.from(
-          printWindow.document
-            .querySelectorAll(
-              "img.design-image"
-            )
-        );
-
-
-      await Promise.all(
-
-        images.map(
-          function(img) {
-
-            if (
-              img.complete &&
-              img.naturalWidth > 0
-            ) {
-
-              return Promise.resolve();
-
-            }
-
-            return new Promise(
-              function(resolve) {
-
-                img.onload =
-                  resolve;
-
-                img.onerror =
-                  resolve;
-
-              }
-            );
-
-          }
-        )
-
-      );
-
-
-      setTimeout(
-        function() {
-
-          printWindow.focus();
-
-          printWindow.print();
-
-        },
-        500
-      );
-
-    },
-    500
-  );
-
-}
-
-
-/* =========================================================
-   VARIANT ROWS
-========================================================= */
-
-function createPrintVariantRows(variants) {
-
-  if (
-    !Array.isArray(variants) ||
-    !variants.length
-  ) {
-
-    return `
-
-      <div class="variant-row">
-
-        <div class="variant-size">
-          Standard
-        </div>
-
-        <div class="variant-price">
-          —
-        </div>
-
-      </div>
-
-    `;
-  }
-
-
-  return variants.map(
-    function(v) {
-
-      const size =
-        escapePrintText(
-          v.size || "Standard"
-        );
-
-
-      const price =
-        Number(
-          String(
-            v.price ?? 0
-          )
-            .replace(/,/g, "")
-            .replace(/[₹$]/g, "")
-            .trim()
-        ) || 0;
-
-
-      return `
-
-        <div class="variant-row">
-
-          <div class="variant-size">
-            ${size}
-          </div>
-
-          <div class="variant-price">
-            ₹${price.toLocaleString("en-IN")}
-          </div>
-
-        </div>
-
-      `;
-
-    }
-  ).join("");
-}
-
-
-/* =========================================================
-   ESCAPE PRINT TEXT
-========================================================= */
-
-function escapePrintText(value) {
-
-  return String(value ?? "")
-
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-
-    .replace(
-      /</g,
-      "&lt;"
-    )
-
-    .replace(
-      />/g,
-      "&gt;"
-    )
-
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-
-    .replace(
-      /'/g,
-      "&#039;"
-    );
 
 }
