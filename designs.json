@@ -70,6 +70,16 @@
     ]
   },
   {
+    "design": "Design4-B",
+    "image": "Design4-B.png",
+    "variants": [
+      {
+        "size": "5x7 inch",
+        "price": 80
+      }
+    ]
+  },
+  {
     "design": "Design5",
     "image": "Design5.png",
     "variants": [
@@ -990,6 +1000,17 @@
       {
         "size": "Regular(30/pc) ",
         "price": 30
+      }
+    ]
+}
+,
+{
+    "design": "Design78",
+    "image": "Design78.png",
+    "variants": [
+      {
+        "size": "Regular",
+        "price": 600
       }
     ]
 }
