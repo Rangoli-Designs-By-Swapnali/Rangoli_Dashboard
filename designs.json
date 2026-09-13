@@ -150,6 +150,36 @@
     ]
   },
   {
+    "design": "Design11-Face-A",
+    "image": "Design11-Face-A.png",
+    "variants": [
+      {
+        "size": "Regular",
+        "price": 700
+      }
+    ]
+  },
+  {
+    "design": "Design11-Face-B",
+    "image": "Design11-Face-B.png",
+    "variants": [
+      {
+        "size": "Regular",
+        "price": 700
+      }
+    ]
+  },
+  {
+    "design": "Design11-C",
+    "image": "Design11-C.png",
+    "variants": [
+      {
+        "size": "Regular(Name)",
+        "price": 80
+      }
+    ]
+  },
+  {
     "design": "Design12",
     "image": "Design12.png",
     "variants": [
