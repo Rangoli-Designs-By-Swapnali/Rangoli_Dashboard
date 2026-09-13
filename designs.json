@@ -150,8 +150,8 @@
     ]
   },
   {
-    "design": "Design11-Face-A",
-    "image": "Design11-Face-A.png",
+    "design": "Design11-A",
+    "image": "Design11-A.png",
     "variants": [
       {
         "size": "Regular",
@@ -160,8 +160,8 @@
     ]
   },
   {
-    "design": "Design11-Face-B",
-    "image": "Design11-Face-B.png",
+    "design": "Design11-B",
+    "image": "Design11-B.png",
     "variants": [
       {
         "size": "Regular",
