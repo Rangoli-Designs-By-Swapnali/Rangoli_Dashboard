@@ -1259,6 +1259,7 @@ function getCartOrderItems() {
 
 function buildWhatsAppMessage(items) {
   let message = "Hi @Rangoli_By_Swapnali 👋\n\n";
+  message += " Name : \n\n";
   message += "I would like to place an order for these Rangoli designs:\n\n";
   items.forEach(item => {
     const subtotal = item.price * item.quantity;

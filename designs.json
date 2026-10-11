@@ -29,6 +29,16 @@
       }
     ]
   },
+	{
+    "design": "Design1-D",
+    "image": "Design1-D.png",
+    "variants": [
+      {
+        "size": "5 inch",
+        "price": 100
+      }
+    ]
+  },
   {
     "design": "Design1",
     "image": "Design1.png",
@@ -95,7 +105,7 @@
     "variants": [
       {
         "size": "5 inch",
-        "price": 50
+        "price": 80
       }
     ]
   },
@@ -105,7 +115,7 @@
     "variants": [
       {
         "size": "5 inch",
-        "price": 50
+        "price": 80
       }
     ]
   },
@@ -317,7 +327,7 @@
     "variants": [
       {
         "size": "3 feet",
-        "price": 400
+        "price": 500
       },
 	  {
         "size": "16 inch (150/pc)",
@@ -332,7 +342,7 @@
     "variants": [
       {
         "size": "3 feet",
-        "price": 400 
+        "price": 500 
       }
 	  ,
 	  {
@@ -385,7 +395,7 @@
     "variants": [
       {
         "size": "32 inch",
-        "price": 400 
+        "price": 500 
       }
     ]
 }
@@ -396,7 +406,7 @@
     "variants": [
       {
         "size": "32 inch",
-        "price": 400 
+        "price": 450 
       }
     ]
 }
@@ -691,7 +701,7 @@
     "variants": [
       {
         "size": "A3 Regular",
-        "price": 400 
+        "price": 450 
       }
     ]
 }
@@ -765,7 +775,7 @@
     "variants": [
       {
         "size": "A3 Regular",
-        "price": 500 
+        "price": 450 
       }
     ]
 }
@@ -830,8 +840,8 @@
     "image": "Design62-A.png",
     "variants": [
       {
-        "size": "32 inch",
-        "price": 400 
+        "size": "3 feet",
+        "price": 500 
       }
     ]
 }
@@ -841,7 +851,7 @@
     "image": "Design62-B.png",
     "variants": [
       {
-        "size": "16 inch (1pc)",
+        "size": "15 inch (1pc)",
         "price": 200 
       }
     ]
@@ -852,8 +862,8 @@
     "image": "Design63-A.png",
     "variants": [
       {
-        "size": "30 inch",
-        "price": 350 
+        "size": "3 feet",
+        "price": 500 
       }
     ]
 }
@@ -930,7 +940,7 @@
     "variants": [
       {
         "size": "10 inch",
-        "price": 250 
+        "price": 300 
       }
     ]
 }
@@ -949,6 +959,22 @@
 {
     "design": "Design71",
     "image": "Design71.png",
+    "variants": [
+      {
+        "size": "8 x 9 inch",
+        "price": 180 
+      }
+	  ,
+	   {
+        "size": "5.5 x 6.3 inch",
+        "price": 150 
+      }
+    ]
+}
+,
+{
+    "design": "Design71-B",
+    "image": "Design71-B.png",
     "variants": [
       {
         "size": "8 x 9 inch",
@@ -1041,6 +1067,50 @@
       {
         "size": "Regular",
         "price": 600
+      }
+    ]
+}
+,
+{
+    "design": "Design79",
+    "image": "Design79.png",
+    "variants": [
+      {
+        "size": "9X8 inch(Full Set)",
+        "price": 550
+      }
+    ]
+}
+,
+{
+    "design": "Design80",
+    "image": "Design80.png",
+    "variants": [
+      {
+        "size": "A3 ",
+        "price": 600
+      }
+    ]
+}
+,
+{
+    "design": "Design81",
+    "image": "Design81.png",
+    "variants": [
+      {
+        "size": "Regular (Full Set)",
+        "price": 400
+      }
+    ]
+}
+,
+{
+    "design": "Design82",
+    "image": "Design82.png",
+    "variants": [
+      {
+        "size": "2x2 feet",
+        "price": 1900
       }
     ]
 }
