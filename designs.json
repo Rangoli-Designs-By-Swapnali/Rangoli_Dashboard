@@ -1105,12 +1105,12 @@
 }
 ,
 {
-    "design": "Design82",
-    "image": "Design82.png",
+    "design": "Design83",
+    "image": "Design83.png",
     "variants": [
       {
-        "size": "2x2 feet",
-        "price": 1900
+        "size": "12 inch",
+        "price": 350
       }
     ]
 }
